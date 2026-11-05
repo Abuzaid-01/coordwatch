@@ -46,6 +46,15 @@ export interface ClusterResult {
   rawScore: number; // before false-positive discount
   discountApplied: number; // e.g. 0.35 if organic news-share discount applied
   discountReason: string | null;
+  classification?: 'coordinated_inauthentic' | 'coordinated_benign' | 'organic';
+  benignChecks?: Record<string, boolean>;
+  significance?: {
+    p_value: number;
+    fdr_q_value?: number;
+    significant?: boolean;
+    fdr_significant?: boolean;
+    stat_observed?: number;
+  };
   size: number;
   memberDids: string[];
   members: {
@@ -187,6 +196,13 @@ export interface EvaluationReport {
     meanF1: number;
     date: string;
   };
+  devSummary?: any;
+  testSummary?: any;
+  nullControl?: any;
+  baselines?: any;
+  ablations?: any;
+  evasionBoundaries?: any[];
+  hardNegatives?: any;
 }
 
 export type EvaluationResult = EvaluationReport;

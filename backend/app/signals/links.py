@@ -4,6 +4,7 @@ Phase 4.4: Shared Links & Hashtags Signal in Python with Rarity Weighting and In
 
 import math
 from typing import Any, Dict, List, Set, Tuple
+import urllib.parse
 
 # C2: Allowlist of high-traffic organic news/official domains that count for little
 POPULAR_DOMAINS_ALLOWLIST = {
@@ -24,9 +25,40 @@ POPULAR_DOMAINS_ALLOWLIST = {
     "twitter.com",
 }
 
+TRACKING_PARAMS = {
+    "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+    "ref", "ref_src", "source", "fbclid", "gclid", "t", "s", "si", "feature",
+}
+
 
 def _pair_key(did1: str, did2: str) -> Tuple[str, str]:
     return (did1, did2) if did1 < did2 else (did2, did1)
+
+
+def canonicalize_url(url: str) -> str:
+    """H10: Canonicalize URL by stripping tracking parameters, normalizing host, scheme, and path."""
+    if not url:
+        return ""
+    try:
+        parsed = urllib.parse.urlparse(url.strip())
+        scheme = (parsed.scheme or "http").lower()
+        netloc = parsed.netloc.lower()
+        if netloc.startswith("www."):
+            netloc = netloc[4:]
+        if ":" in netloc:
+            host, port = netloc.split(":", 1)
+            if (scheme == "http" and port == "80") or (scheme == "https" and port == "443"):
+                netloc = host
+        path = parsed.path.rstrip("/") or "/"
+
+        query_pairs = urllib.parse.parse_qsl(parsed.query, keep_blank_values=False)
+        clean_pairs = [(k, v) for k, v in query_pairs if k.lower() not in TRACKING_PARAMS]
+        clean_pairs.sort()
+        clean_query = urllib.parse.urlencode(clean_pairs)
+
+        return urllib.parse.urlunparse((scheme, netloc, path, "", clean_query, ""))
+    except Exception:
+        return url.strip().lower()
 
 
 def _get_domain(url: str) -> str:
@@ -40,6 +72,7 @@ def compute_shared_links_signal(posts: List[Dict[str, Any]]) -> List[Dict[str, A
     """
     C2: Uses an inverted index (link -> set of accounts) and rarity weighting.
     Viral/common news links shared by hundreds of accounts receive discounted weights.
+    H10: URLs are canonicalized prior to matching.
     """
     links_by_did: Dict[str, Set[str]] = {}
     tags_by_did: Dict[str, Set[str]] = {}
@@ -50,14 +83,16 @@ def compute_shared_links_signal(posts: List[Dict[str, Any]]) -> List[Dict[str, A
     for p in posts:
         did = p["did"]
         for link in p.get("links") or []:
-            l_clean = link.lower()
-            links_by_did.setdefault(did, set()).add(l_clean)
-            dids_by_link.setdefault(l_clean, set()).add(did)
+            l_clean = canonicalize_url(link)
+            if l_clean:
+                links_by_did.setdefault(did, set()).add(l_clean)
+                dids_by_link.setdefault(l_clean, set()).add(did)
 
         for tag in p.get("hashtags") or []:
-            t_clean = tag.lower()
-            tags_by_did.setdefault(did, set()).add(t_clean)
-            dids_by_tag.setdefault(t_clean, set()).add(did)
+            t_clean = tag.lower().lstrip("#")
+            if t_clean:
+                tags_by_did.setdefault(did, set()).add(t_clean)
+                dids_by_tag.setdefault(t_clean, set()).add(did)
 
     candidate_pairs: Set[Tuple[str, str]] = set()
 

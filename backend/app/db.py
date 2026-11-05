@@ -107,9 +107,10 @@ def create_or_get_topic(keyword: str, mode: str = "hybrid", source: str = "live"
             )
             conn.commit()
             t_id = cur.lastrowid
-            # Seed matching posts from recorded sample jsonl if available
-            _replay_jsonl_for_topic(t_id, clean_kw)
-            analyze_and_persist_topic(t_id)
+            # Only replay pre-recorded dataset if source is explicitly 'recorded' or 'demo'
+            if source in ("recorded", "demo"):
+                _replay_jsonl_for_topic(t_id, clean_kw)
+                analyze_and_persist_topic(t_id)
 
         topics = get_topics_list()
         found = next((t for t in topics if t["id"] == t_id), None)

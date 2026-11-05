@@ -34,6 +34,9 @@ def export_sample_dataset(output_path: Path = None, topic_id: int = None, limit:
         JOIN accounts a ON p.did = a.did
         LEFT JOIN topics t ON p.topic_id = t.id
         WHERE (a.created_at IS NOT NULL OR a.enriched = 1)
+          AND p.did NOT LIKE 'did:plc:ulezring%'
+          AND p.did NOT LIKE 'did:plc:citizen%'
+          AND p.source = 'live'
         """
         params = []
         if topic_id:

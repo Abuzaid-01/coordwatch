@@ -128,7 +128,7 @@ export default function App() {
   };
 
   const currentTopicObj = topics.find(t => t.id === selectedTopic);
-  const isDemoTopic = currentTopicObj?.source === 'demo' || currentTopicObj?.id === 1;
+  const isDemoTopic = currentTopicObj?.source === 'demo' || currentTopicObj?.source === 'synthetic' || currentTopicObj?.id === 1;
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
@@ -204,8 +204,12 @@ export default function App() {
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
                   <span className="font-medium">{t.keyword}</span>
-                  {t.source === 'demo' && (
-                    <span className="text-[10px] bg-amber-500/30 text-amber-300 px-1.5 py-0.2 rounded font-semibold uppercase">Demo</span>
+                  {t.source === 'demo' || t.source === 'synthetic' ? (
+                    <span className="text-[10px] bg-amber-500/30 text-amber-300 px-1.5 py-0.5 rounded font-mono font-semibold uppercase">Demo</span>
+                  ) : t.source === 'recorded' ? (
+                    <span className="text-[10px] bg-purple-500/30 text-purple-300 px-1.5 py-0.5 rounded font-mono font-semibold uppercase">Recorded</span>
+                  ) : (
+                    <span className="text-[10px] bg-emerald-500/30 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-semibold uppercase">Live</span>
                   )}
                   <span className="text-xs opacity-70">{t.postCount} posts · {t.clusterCount} clusters</span>
                 </button>

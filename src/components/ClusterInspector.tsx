@@ -66,6 +66,23 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
         ? 'Elevated Coordination Pattern'
         : 'Discounted Organic News Burst';
 
+  const classification = cluster.classification || (score >= 60 ? 'coordinated_inauthentic' : score >= 40 ? 'coordinated_benign' : 'organic');
+
+  const classBadge =
+    classification === 'coordinated_inauthentic' ? (
+      <span className="text-[10px] bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
+        ⚠️ Coordinated Inauthentic
+      </span>
+    ) : classification === 'coordinated_benign' ? (
+      <span className="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
+        🛡️ Coordinated Benign
+      </span>
+    ) : (
+      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
+        🌱 Organic Discourse
+      </span>
+    );
+
   const severityColor =
     score >= 70
       ? 'text-red-400'
@@ -177,10 +194,11 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
         <div className="p-4 border-b border-slate-800/90 bg-[#090B10]/60">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <div className="flex flex-wrap items-baseline gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-xl font-bold text-slate-100 font-display tracking-tight whitespace-nowrap shrink-0">
                   Cluster {cluster.id}
                 </h2>
+                {classBadge}
                 <span className="text-xs text-slate-500">·</span>
                 <span className={`text-xs font-medium ${severityColor}`}>
                   {severityLabel}
@@ -343,6 +361,40 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
                   </li>
                 ))}
               </ul>
+            </div>
+
+            {/* Benign Explanations Evaluated (D1 Evidence Protection) */}
+            <div className="pt-3 border-t border-slate-800/80">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-semibold text-slate-200">
+                  Benign Explanations Evaluated (D1 Evidence Protection)
+                </h3>
+                {cluster.significance && (
+                  <span className="text-[11px] font-mono text-slate-400">
+                    Permutation Null-Model: <strong className={cluster.significance.significant ? "text-amber-400" : "text-emerald-400"}>p = {cluster.significance.p_value.toFixed(4)}</strong>
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div className="p-2 bg-[#090B10] border border-slate-800/80 rounded flex items-center justify-between">
+                  <span className="text-slate-400">Share-Button Headline Match</span>
+                  <span className={cluster.benignChecks?.share_button_match ? "text-emerald-400 font-mono text-[11px]" : "text-slate-500 font-mono text-[11px]"}>
+                    {cluster.benignChecks?.share_button_match ? "✓ MATCHED" : "✗ Disproven"}
+                  </span>
+                </div>
+                <div className="p-2 bg-[#090B10] border border-slate-800/80 rounded flex items-center justify-between">
+                  <span className="text-slate-400">Authoritative Press Source</span>
+                  <span className={cluster.benignChecks?.authoritative_news_source ? "text-emerald-400 font-mono text-[11px]" : "text-slate-500 font-mono text-[11px]"}>
+                    {cluster.benignChecks?.authoritative_news_source ? "✓ VERIFIED" : "✗ Inauthentic URL"}
+                  </span>
+                </div>
+                <div className="p-2 bg-[#090B10] border border-slate-800/80 rounded flex items-center justify-between">
+                  <span className="text-slate-400">Open Community Movement</span>
+                  <span className={cluster.benignChecks?.open_community_hashtag ? "text-emerald-400 font-mono text-[11px]" : "text-slate-500 font-mono text-[11px]"}>
+                    {cluster.benignChecks?.open_community_hashtag ? "✓ CONFIRMED" : "✗ Astroturfed"}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Preview of Top 2 Posts right inside Evidence tab */}

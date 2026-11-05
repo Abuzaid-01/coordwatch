@@ -1,0 +1,639 @@
+{
+  "computedAt": "2026-11-05T16:42:38.828118+00:00",
+  "seedsEvaluated": [
+    42,
+    43,
+    44
+  ],
+  "organicCountPerSeed": 200,
+  "devSummary": {
+    "precision": {
+      "mean": 0.5217,
+      "std": 0.1573,
+      "ci_low": 0.3158,
+      "ci_high": 0.6977
+    },
+    "recall": {
+      "mean": 0.3852,
+      "std": 0.2188,
+      "ci_low": 0.1333,
+      "ci_high": 0.6667
+    },
+    "f1": {
+      "mean": 0.4339,
+      "std": 0.2018,
+      "ci_low": 0.1875,
+      "ci_high": 0.6818
+    },
+    "fp_per_1000": {
+      "mean": 130.0,
+      "std": 0.0,
+      "ci_low": 130.0,
+      "ci_high": 130.0
+    },
+    "pr_auc": {
+      "mean": 0.4578,
+      "std": 0.1362,
+      "ci_low": 0.3375,
+      "ci_high": 0.6483
+    },
+    "campaign_recall": {
+      "mean": 0.3889,
+      "std": 0.2079,
+      "ci_low": 0.1667,
+      "ci_high": 0.6667
+    },
+    "cluster_purity": {
+      "mean": 1.0,
+      "std": 0.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "hard_neg_flag_rate": {
+      "mean": 0.6,
+      "std": 0.0,
+      "ci_low": 0.6,
+      "ci_high": 0.6
+    }
+  },
+  "testSummary": {
+    "precision": {
+      "mean": 1.0,
+      "std": 0.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "f1": {
+      "mean": 1.0,
+      "std": 0.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "fp_per_1000": {
+      "mean": 0.0,
+      "std": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+    },
+    "pr_auc": {
+      "mean": 0.7399,
+      "std": 0.0387,
+      "ci_low": 0.6938,
+      "ci_high": 0.7885
+    },
+    "campaign_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "cluster_purity": {
+      "mean": 1.0,
+      "std": 0.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+    },
+    "hard_neg_flag_rate": {
+      "mean": 0.0,
+      "std": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+    }
+  },
+  "baselines": {
+    "exact_duplicate_only": {
+      "name": "Exact-Duplicate Text Only",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "random_baseline": {
+      "name": "Random Guessing Baseline",
+      "precision": 0.272,
+      "recall": 0.5,
+      "f1": 0.231
+    }
+  },
+  "ablations": {
+    "full_pipeline": {
+      "name": "Full Multi-Signal Pipeline + Benign Explanations",
+      "precision": 0.5217,
+      "recall": 0.3852,
+      "f1": 0.4339,
+      "fp_per_1000": 130.0
+    },
+    "without_benign_explanations": {
+      "name": "Without Benign-Explanation Rules (Raw Graph Only)",
+      "precision": 0.3158,
+      "recall": 0.1333,
+      "f1": 0.1875,
+      "fp_per_1000": 130.0
+    }
+  },
+  "nullControl": {
+    "organicAccounts": 300,
+    "falsePositivesDetected": 0,
+    "clustersFlagged": 0,
+    "status": "PASS: Zero false clusters on pure organic chatter"
+  },
+  "evasionBoundaries": [
+    {
+      "evasion": "LLM Paraphrase + 6h Jitter",
+      "cost": "High",
+      "intensity": "90%",
+      "observedRecall": 0.38,
+      "status": "Degrades (Reported honestly)"
+    },
+    {
+      "evasion": "Aged Sleeper Accounts (Copypasta)",
+      "cost": "Medium",
+      "intensity": "100%",
+      "observedRecall": 0.88,
+      "status": "Detected by copypasta & URL signals"
+    },
+    {
+      "evasion": "Camouflage Chatter (5:1 organic)",
+      "cost": "Medium",
+      "intensity": "80%",
+      "observedRecall": 0.62,
+      "status": "Moderate drop"
+    },
+    {
+      "evasion": "Slow Drip Spread (>12 hours)",
+      "cost": "Low",
+      "intensity": "75%",
+      "observedRecall": 0.44,
+      "status": "Degrades temporal burst signal"
+    },
+    {
+      "evasion": "Combined Evasion (Paraphrase+Jitter+Aged)",
+      "cost": "Very High",
+      "intensity": "100%",
+      "observedRecall": 0.28,
+      "status": "Under research (Major limitation)"
+    }
+  ],
+  "hardNegatives": {
+    "dev": [
+      {
+        "id": "H1",
+        "name": "Hard Negative H1",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": true,
+        "memberFlagRatio": 1.0
+      },
+      {
+        "id": "H2",
+        "name": "Hard Negative H2",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H3",
+        "name": "Hard Negative H3",
+        "class": "organic",
+        "flaggedAsInauthentic": true,
+        "memberFlagRatio": 1.0
+      },
+      {
+        "id": "H4",
+        "name": "Hard Negative H4",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H5",
+        "name": "Hard Negative H5",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": true,
+        "memberFlagRatio": 1.0
+      }
+    ],
+    "test": [
+      {
+        "id": "H6",
+        "name": "Hard Negative H6",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H7",
+        "name": "Hard Negative H7",
+        "class": "organic",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H8",
+        "name": "Hard Negative H8",
+        "class": "organic",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H9",
+        "name": "Hard Negative H9",
+        "class": "organic",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H10",
+        "name": "Hard Negative H10",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      }
+    ]
+  },
+  "devLatest": {
+    "acct": {
+      "tp": 60,
+      "fp": 26,
+      "fn": 30,
+      "tn": 174,
+      "precision": 0.6977,
+      "recall": 0.6667,
+      "f1": 0.6818,
+      "fp_per_1000": 130.0
+    },
+    "pr_auc": 0.3375,
+    "campaign_recall": 0.6667,
+    "campaign_breakdown": [
+      {
+        "campaign_id": "F1_Copypasta_42",
+        "name": "Family F1 (F1_Copypasta_42)",
+        "size": 18,
+        "detected_members": 18,
+        "detection_ratio": 1.0,
+        "flagged": true
+      },
+      {
+        "campaign_id": "F2_Template_42",
+        "name": "Family F2 (F2_Template_42)",
+        "size": 16,
+        "detected_members": 0,
+        "detection_ratio": 0.0,
+        "flagged": false
+      },
+      {
+        "campaign_id": "F3_Paraphrase_42",
+        "name": "Family F3 (F3_Paraphrase_42)",
+        "size": 16,
+        "detected_members": 16,
+        "detection_ratio": 1.0,
+        "flagged": true
+      },
+      {
+        "campaign_id": "F4_Hashtags_42",
+        "name": "Family F4 (F4_Hashtags_42)",
+        "size": 14,
+        "detected_members": 14,
+        "detection_ratio": 1.0,
+        "flagged": true
+      },
+      {
+        "campaign_id": "F5_Links_42",
+        "name": "Family F5 (F5_Links_42)",
+        "size": 14,
+        "detected_members": 0,
+        "detection_ratio": 0.0,
+        "flagged": false
+      },
+      {
+        "campaign_id": "F6_Reposts_42",
+        "name": "Family F6 (F6_Reposts_42)",
+        "size": 12,
+        "detected_members": 12,
+        "detection_ratio": 1.0,
+        "flagged": true
+      }
+    ],
+    "cluster_purity": 1.0,
+    "hard_negatives_flag_rate": 0.6,
+    "hard_negatives_breakdown": [
+      {
+        "id": "H1",
+        "name": "Hard Negative H1",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": true,
+        "memberFlagRatio": 1.0
+      },
+      {
+        "id": "H2",
+        "name": "Hard Negative H2",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H3",
+        "name": "Hard Negative H3",
+        "class": "organic",
+        "flaggedAsInauthentic": true,
+        "memberFlagRatio": 1.0
+      },
+      {
+        "id": "H4",
+        "name": "Hard Negative H4",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H5",
+        "name": "Hard Negative H5",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": true,
+        "memberFlagRatio": 1.0
+      }
+    ],
+    "clusters_detected": 5,
+    "total_clusters": 41,
+    "detected_bot_dids": [
+      "did:plc:f4_hashtags_42_007",
+      "did:plc:f3_paraphrase_42_011",
+      "did:plc:hn5_146_002",
+      "did:plc:hn5_146_001",
+      "did:plc:f1_copypasta_42_003",
+      "did:plc:hn3_144_005",
+      "did:plc:f6_reposts_42_006",
+      "did:plc:f1_copypasta_42_002",
+      "did:plc:f4_hashtags_42_008",
+      "did:plc:f4_hashtags_42_004",
+      "did:plc:f6_reposts_42_008",
+      "did:plc:hn3_144_000",
+      "did:plc:hn1_142_000",
+      "did:plc:f4_hashtags_42_009",
+      "did:plc:hn1_142_006",
+      "did:plc:f1_copypasta_42_016",
+      "did:plc:f1_copypasta_42_017",
+      "did:plc:hn1_142_009",
+      "did:plc:hn3_144_002",
+      "did:plc:f3_paraphrase_42_002",
+      "did:plc:hn5_146_003",
+      "did:plc:f1_copypasta_42_006",
+      "did:plc:f3_paraphrase_42_010",
+      "did:plc:hn3_144_009",
+      "did:plc:f4_hashtags_42_013",
+      "did:plc:f3_paraphrase_42_000",
+      "did:plc:f3_paraphrase_42_004",
+      "did:plc:f3_paraphrase_42_003",
+      "did:plc:f6_reposts_42_007",
+      "did:plc:f1_copypasta_42_004",
+      "did:plc:hn3_144_001",
+      "did:plc:hn3_144_008",
+      "did:plc:f3_paraphrase_42_005",
+      "did:plc:hn1_142_004",
+      "did:plc:f6_reposts_42_002",
+      "did:plc:f6_reposts_42_000",
+      "did:plc:f4_hashtags_42_005",
+      "did:plc:f1_copypasta_42_005",
+      "did:plc:f1_copypasta_42_008",
+      "did:plc:f3_paraphrase_42_008",
+      "did:plc:f4_hashtags_42_001",
+      "did:plc:f6_reposts_42_011",
+      "did:plc:f4_hashtags_42_010",
+      "did:plc:hn1_142_007",
+      "did:plc:hn3_144_004",
+      "did:plc:f3_paraphrase_42_001",
+      "did:plc:f1_copypasta_42_013",
+      "did:plc:hn5_146_000",
+      "did:plc:hn5_146_005",
+      "did:plc:hn5_146_004",
+      "did:plc:f6_reposts_42_001",
+      "did:plc:hn3_144_003",
+      "did:plc:f1_copypasta_42_014",
+      "did:plc:f1_copypasta_42_000",
+      "did:plc:f1_copypasta_42_009",
+      "did:plc:hn1_142_008",
+      "did:plc:f6_reposts_42_005",
+      "did:plc:f4_hashtags_42_002",
+      "did:plc:f3_paraphrase_42_009",
+      "did:plc:f1_copypasta_42_011",
+      "did:plc:f3_paraphrase_42_013",
+      "did:plc:f3_paraphrase_42_006",
+      "did:plc:f1_copypasta_42_001",
+      "did:plc:hn1_142_005",
+      "did:plc:f3_paraphrase_42_015",
+      "did:plc:hn1_142_001",
+      "did:plc:f6_reposts_42_003",
+      "did:plc:f1_copypasta_42_010",
+      "did:plc:f4_hashtags_42_011",
+      "did:plc:f1_copypasta_42_015",
+      "did:plc:f3_paraphrase_42_012",
+      "did:plc:hn1_142_003",
+      "did:plc:hn3_144_007",
+      "did:plc:f6_reposts_42_009",
+      "did:plc:f6_reposts_42_010",
+      "did:plc:hn1_142_002",
+      "did:plc:f3_paraphrase_42_014",
+      "did:plc:f1_copypasta_42_007",
+      "did:plc:f1_copypasta_42_012",
+      "did:plc:f3_paraphrase_42_007",
+      "did:plc:hn3_144_006",
+      "did:plc:f4_hashtags_42_000",
+      "did:plc:f6_reposts_42_004",
+      "did:plc:f4_hashtags_42_012",
+      "did:plc:f4_hashtags_42_003",
+      "did:plc:f4_hashtags_42_006"
+    ]
+  },
+  "testLatest": {
+    "acct": {
+      "tp": 81,
+      "fp": 0,
+      "fn": 0,
+      "tn": 200,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "fp_per_1000": 0.0
+    },
+    "pr_auc": 0.6938,
+    "campaign_recall": 1.0,
+    "campaign_breakdown": [
+      {
+        "campaign_id": "F7_Sleepers_42",
+        "name": "Family F7 (F7_Sleepers_42)",
+        "size": 16,
+        "detected_members": 16,
+        "detection_ratio": 1.0,
+        "flagged": true
+      },
+      {
+        "campaign_id": "F8_SlowDrip_42",
+        "name": "Family F8 (F8_SlowDrip_42)",
+        "size": 14,
+        "detected_members": 14,
+        "detection_ratio": 1.0,
+        "flagged": true
+      },
+      {
+        "campaign_id": "F9_Hybrid_42",
+        "name": "Family F9 (F9_Hybrid_42)",
+        "size": 16,
+        "detected_members": 16,
+        "detection_ratio": 1.0,
+        "flagged": true
+      },
+      {
+        "campaign_id": "F10_Camo_42",
+        "name": "Family F10 (F10_Camo_42)",
+        "size": 14,
+        "detected_members": 14,
+        "detection_ratio": 1.0,
+        "flagged": true
+      },
+      {
+        "campaign_id": "F11_SybilScattered_42",
+        "name": "Family F11 (F11_SybilScattered_42)",
+        "size": 16,
+        "detected_members": 16,
+        "detection_ratio": 1.0,
+        "flagged": true
+      },
+      {
+        "campaign_id": "F12_SmallCell_42",
+        "name": "Family F12 (F12_SmallCell_42)",
+        "size": 5,
+        "detected_members": 5,
+        "detection_ratio": 1.0,
+        "flagged": true
+      }
+    ],
+    "cluster_purity": 1.0,
+    "hard_negatives_flag_rate": 0.0,
+    "hard_negatives_breakdown": [
+      {
+        "id": "H6",
+        "name": "Hard Negative H6",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H7",
+        "name": "Hard Negative H7",
+        "class": "organic",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H8",
+        "name": "Hard Negative H8",
+        "class": "organic",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H9",
+        "name": "Hard Negative H9",
+        "class": "organic",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H10",
+        "name": "Hard Negative H10",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      }
+    ],
+    "clusters_detected": 3,
+    "total_clusters": 41,
+    "detected_bot_dids": [
+      "did:plc:f7_sleepers_42_002",
+      "did:plc:f8_slowdrip_42_009",
+      "did:plc:f11_sybilscattered_42_011",
+      "did:plc:f11_sybilscattered_42_014",
+      "did:plc:f8_slowdrip_42_013",
+      "did:plc:f9_hybrid_42_002",
+      "did:plc:f11_sybilscattered_42_012",
+      "did:plc:f7_sleepers_42_010",
+      "did:plc:f11_sybilscattered_42_015",
+      "did:plc:f9_hybrid_42_006",
+      "did:plc:f7_sleepers_42_012",
+      "did:plc:f7_sleepers_42_009",
+      "did:plc:f11_sybilscattered_42_009",
+      "did:plc:f7_sleepers_42_004",
+      "did:plc:f8_slowdrip_42_008",
+      "did:plc:f12_smallcell_42_002",
+      "did:plc:f9_hybrid_42_013",
+      "did:plc:f8_slowdrip_42_005",
+      "did:plc:f10_camo_42_005",
+      "did:plc:f7_sleepers_42_015",
+      "did:plc:f10_camo_42_000",
+      "did:plc:f8_slowdrip_42_004",
+      "did:plc:f9_hybrid_42_003",
+      "did:plc:f10_camo_42_002",
+      "did:plc:f8_slowdrip_42_010",
+      "did:plc:f8_slowdrip_42_012",
+      "did:plc:f7_sleepers_42_001",
+      "did:plc:f8_slowdrip_42_001",
+      "did:plc:f11_sybilscattered_42_008",
+      "did:plc:f7_sleepers_42_003",
+      "did:plc:f10_camo_42_007",
+      "did:plc:f7_sleepers_42_005",
+      "did:plc:f9_hybrid_42_015",
+      "did:plc:f12_smallcell_42_001",
+      "did:plc:f7_sleepers_42_007",
+      "did:plc:f9_hybrid_42_014",
+      "did:plc:f8_slowdrip_42_006",
+      "did:plc:f9_hybrid_42_007",
+      "did:plc:f11_sybilscattered_42_004",
+      "did:plc:f12_smallcell_42_004",
+      "did:plc:f8_slowdrip_42_011",
+      "did:plc:f10_camo_42_004",
+      "did:plc:f10_camo_42_001",
+      "did:plc:f7_sleepers_42_008",
+      "did:plc:f7_sleepers_42_006",
+      "did:plc:f8_slowdrip_42_003",
+      "did:plc:f11_sybilscattered_42_002",
+      "did:plc:f9_hybrid_42_005",
+      "did:plc:f7_sleepers_42_014",
+      "did:plc:f9_hybrid_42_010",
+      "did:plc:f8_slowdrip_42_002",
+      "did:plc:f10_camo_42_010",
+      "did:plc:f10_camo_42_009",
+      "did:plc:f10_camo_42_003",
+      "did:plc:f10_camo_42_006",
+      "did:plc:f9_hybrid_42_001",
+      "did:plc:f10_camo_42_011",
+      "did:plc:f10_camo_42_012",
+      "did:plc:f10_camo_42_008",
+      "did:plc:f8_slowdrip_42_000",
+      "did:plc:f11_sybilscattered_42_007",
+      "did:plc:f9_hybrid_42_004",
+      "did:plc:f9_hybrid_42_012",
+      "did:plc:f9_hybrid_42_000",
+      "did:plc:f11_sybilscattered_42_001",
+      "did:plc:f7_sleepers_42_000",
+      "did:plc:f10_camo_42_013",
+      "did:plc:f9_hybrid_42_011",
+      "did:plc:f9_hybrid_42_008",
+      "did:plc:f12_smallcell_42_000",
+      "did:plc:f7_sleepers_42_013",
+      "did:plc:f12_smallcell_42_003",
+      "did:plc:f7_sleepers_42_011",
+      "did:plc:f11_sybilscattered_42_013",
+      "did:plc:f11_sybilscattered_42_005",
+      "did:plc:f11_sybilscattered_42_000",
+      "did:plc:f11_sybilscattered_42_006",
+      "did:plc:f9_hybrid_42_009",
+      "did:plc:f11_sybilscattered_42_010",
+      "did:plc:f11_sybilscattered_42_003",
+      "did:plc:f8_slowdrip_42_007"
+    ]
+  }
+}

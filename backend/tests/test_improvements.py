@@ -150,3 +150,30 @@ def test_evasion_modes_change_data():
     delay_bot_ts = [p["created_at"] for p in delay["posts"] if "bot" in p["did"]]
     assert base_bot_ts != delay_bot_ts
 
+
+def test_aged_sleeper_accounts_not_discounted_when_copypasta():
+    """P3 / D1: Aged accounts with identical copypasta and tight timing are NOT discounted."""
+    from backend.app.analysis.scoring import compute_cluster_score_and_reasons
+    scored = compute_cluster_score_and_reasons(
+        cluster_dids=["did:plc:sleeper1", "did:plc:sleeper2", "did:plc:sleeper3"],
+        signal_averages={"text": 0.85, "timing": 0.80, "age": 0.05, "links": 0.80},
+        cohort_48h_count=0,
+        median_age_days=400.0,
+        enable_fp_protection=True,
+    )
+    assert scored["discount_applied"] == 0.0
+    assert scored["score"] >= 65
+    assert scored["classification"] == "coordinated_inauthentic"
+
+
+def test_url_canonicalization_strips_tracking():
+    """H10: URL canonicalization strips utm and ref tracking parameters."""
+    from backend.app.signals.links import canonicalize_url
+    u1 = "https://example.com/story?utm_source=twitter&utm_medium=social&utm_campaign=boost"
+    u2 = "https://example.com/story?ref=homepage"
+    u3 = "https://example.com/story"
+    assert canonicalize_url(u1) == "https://example.com/story"
+    assert canonicalize_url(u2) == "https://example.com/story"
+    assert canonicalize_url(u1) == canonicalize_url(u3)
+
+

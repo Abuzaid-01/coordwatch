@@ -74,15 +74,15 @@ export const EthicsAndDocsView: React.FC<EthicsAndDocsViewProps> = ({ activeTopi
     }
   };
 
-  const outreachTemplate = `Hi [Name],
+  const outreachTemplate = `Hi Rohan,
 
-I've been following Valent's work on Ariadne and narrative risk intelligence — especially how you map seeding-to-amplification lifecycles across platforms.
+I've been following Valent's work, especially the Mayor of London case study. Inspired by Ariadne's approach to separating organic from manufactured activity, I built CoordWatch, a FastAPI + React prototype that detects coordinated account behavior on Bluesky and explains each flag with evidence.
 
-To explore the problem hands-on, I built an open-source prototype called CoordWatch that ingests Bluesky's live Jetstream firehose and detects coordinated narrative amplification using text similarity, temporal bursts, account creation cohorts, and NetworkX community detection, evaluated against a synthetic bot simulator.
+I evaluated it on real Bluesky Jetstream data and on a held-out synthetic benchmark with 12 distinct attack families and hard negatives (accounting for unseen tactics), and I documented what beats it, including aged sleeper accounts and paraphrase plus jitter.
 
 Demo / repo: [link]
 
-I'd love to hear any feedback from an engineer on your team if you have 10 minutes — and if Valent ever takes on interns or junior engineers, I'd be very keen to be considered.`;
+I'd really value your feedback if someone on your team has a few minutes to take a look.`;
 
   return (
     <div className="space-y-6">
@@ -309,16 +309,16 @@ I'd love to hear any feedback from an engineer on your team if you have 10 minut
           </div>
         </div>
 
-        {/* Phase 10: Valent Projects / Ariadne Inspiration & Outreach Card */}
+        {/* Phase 10: Valent / Ariadne Inspiration & Outreach Card */}
         <div className="bg-[#0E121B] border border-slate-800/90 rounded-lg overflow-hidden flex flex-col justify-between">
           <div>
             <div className="px-5 py-3.5 bg-[#0B0E16] border-b border-slate-800/90 flex items-center justify-between gap-2">
               <div>
                 <h2 className="text-sm font-semibold text-slate-100 tracking-tight">
-                  Inspiration: Valent Projects’ Ariadne Engine &amp; Outreach Brief
+                  Inspiration: Valent’s Ariadne Engine &amp; Outreach Brief
                 </h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Phase 10 portfolio summary &amp; engineering outreach template ready to copy.
+                  Portfolio summary &amp; engineering outreach template ready to copy.
                 </p>
               </div>
               <button
@@ -346,7 +346,7 @@ I'd love to hear any feedback from an engineer on your team if you have 10 minut
 
             <div className="p-5 space-y-3">
               <p className="text-xs text-slate-300 leading-relaxed">
-                Inspired by <strong className="text-slate-100">Valent Projects’ Ariadne</strong> narrative risk intelligence platform (<code className="text-sky-300">valent-projects.com</code>), CoordWatch demonstrates how multi-signal graph topology separates organic public reaction from synchronized influence operations across the seeding-to-amplification lifecycle.
+                Inspired by <strong className="text-slate-100">Valent’s Ariadne</strong> narrative risk intelligence platform (<a href="https://valent.co.uk" target="_blank" rel="noreferrer" className="text-sky-300 hover:underline">valent.co.uk</a>), CoordWatch demonstrates how multi-signal graph topology separates organic public reaction from synchronized influence operations across the seeding-to-amplification lifecycle.
               </p>
               <pre className="p-3 bg-[#090B10] border border-slate-800/90 rounded text-[11px] font-mono text-slate-300 whitespace-pre-wrap leading-relaxed">
                 {outreachTemplate}

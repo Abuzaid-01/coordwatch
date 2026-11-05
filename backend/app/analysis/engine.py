@@ -11,6 +11,7 @@ from ..signals.age import compute_account_age_signal
 from ..signals.links import compute_shared_links_signal
 from .graph import build_and_partition_graph
 from .scoring import compute_cluster_score_and_reasons
+from .significance import compute_cluster_significance, apply_benjamini_hochberg_fdr
 
 
 def _pair_key(d1: str, d2: str) -> Tuple[str, str, str]:
@@ -168,13 +169,24 @@ def run_topic_analysis(
         age_days_list = [max(0.0, (now_ts - ts) / 86400.0) for ts in created_timestamps]
         median_age_days = age_days_list[len(age_days_list) // 2] if age_days_list else 30.0
 
-        # Phase 5.5 False-Positive Protection
+        # Compute null-model permutation significance
+        sig_result = compute_cluster_significance(
+            cluster_dids=comm_dids,
+            cluster_score=raw_score if "raw_score" in locals() else 50.0,
+            all_topic_posts=posts,
+            n_permutations=50,
+            seed=42 + cluster_seq,
+        )
+
+        # Phase 5.5 False-Positive Protection & D1 Benign Explanations
         scored = compute_cluster_score_and_reasons(
             comm_dids,
             sig_breakdown,
             cohort_48h_count=max_cohort_48h,
             median_age_days=median_age_days,
             enable_fp_protection=enable_fp_protection,
+            cluster_posts=cluster_posts,
+            empirical_p_value=sig_result.get("p_value"),
         )
 
         final_score = scored["score"]
@@ -240,6 +252,9 @@ def run_topic_analysis(
             "rawScore": raw_score,
             "discountApplied": discount_applied,
             "discountReason": scored.get("discount_reason"),
+            "classification": scored.get("classification", "coordinated_inauthentic"),
+            "benignChecks": scored.get("benign_checks", {}),
+            "significance": sig_result,
             "size": len(comm_dids),
             "memberDids": comm_dids,
             "members": members,
@@ -249,6 +264,8 @@ def run_topic_analysis(
             "computedAt": datetime.now(timezone.utc).isoformat(),
         })
 
+    # Apply Benjamini-Hochberg FDR control
+    clusters = apply_benjamini_hochberg_fdr(clusters)
     clusters.sort(key=lambda c: (c["score"], c["size"]), reverse=True)
 
     # 5. Graph Assembly (Nodes + Links with capping)
