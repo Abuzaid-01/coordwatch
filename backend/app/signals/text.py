@@ -1,13 +1,20 @@
 """
-Phase 4.1: Pure Text Similarity Signal (exact text_norm duplicate hash + char 3-gram TF-IDF cosine similarity).
-Works with scikit-learn TfidfVectorizer when installed, and includes a zero-dependency pure-Python
-char 3-gram TF-IDF vector implementation so unit tests also run in any standard Python environment.
+Phase 4.1: Text Similarity Signal (exact text_norm duplicate hash + char 3-gram TF-IDF cosine similarity).
+D3: Uses scikit-learn TfidfVectorizer and sparse matrix multiplication for fast O(N) vectorized comparison,
+with fallback to zero-dependency pure-Python char 3-gram TF-IDF vector implementation.
 """
 
 from collections import Counter
 from datetime import datetime
 import math
 from typing import Any, Dict, List, Tuple
+
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    import scipy.sparse as sp
+    SKLEARN_AVAILABLE = True
+except ImportError:
+    SKLEARN_AVAILABLE = False
 
 
 def _parse_ts(iso_str: str) -> float:
@@ -43,60 +50,100 @@ def compute_text_similarity_signal(
         return []
 
     n_docs = len(valid)
-    grams_list = [_char_ngrams(p.get("text_norm") or p.get("textNorm", ""), 3) for p in valid]
-    df: Counter = Counter()
-    for g in grams_list:
-        for token in g.keys():
-            df[token] += 1
-
-    tfidf_vecs: List[Tuple[Dict[str, float], float]] = []
-    for g in grams_list:
-        vec: Dict[str, float] = {}
-        norm_sq = 0.0
-        for token, count in g.items():
-            idf = math.log(1.0 + n_docs / (1.0 + df[token]))
-            val = (1.0 + math.log(count)) * idf
-            vec[token] = val
-            norm_sq += val * val
-        tfidf_vecs.append((vec, math.sqrt(norm_sq) or 1.0))
-
     best_pairs: Dict[Tuple[str, str], Dict[str, Any]] = {}
 
-    for i in range(n_docs):
-        p_a = valid[i]
-        norm_a = p_a.get("text_norm") or p_a.get("textNorm", "")
-        vec_a, mag_a = tfidf_vecs[i]
+    if SKLEARN_AVAILABLE:
+        texts = [p.get("text_norm") or p.get("textNorm", "") for p in valid]
+        vec = TfidfVectorizer(analyzer="char", ngram_range=(3, 3), min_df=1)
+        tfidf_mat = vec.fit_transform(texts)
+        sim_mat = tfidf_mat.dot(tfidf_mat.T)
 
-        for j in range(i + 1, n_docs):
-            p_b = valid[j]
-            if abs(p_b["_ts"] - p_a["_ts"]) > max_window_sec:
-                break
-            if p_a["did"] == p_b["did"]:
-                continue
+        for i in range(n_docs):
+            p_a = valid[i]
+            norm_a = texts[i]
+            ts_a = p_a["_ts"]
 
-            norm_b = p_b.get("text_norm") or p_b.get("textNorm", "")
-            is_exact = norm_a == norm_b
-            if is_exact:
-                sim = 1.0
-            else:
-                vec_b, mag_b = tfidf_vecs[j]
-                smaller, larger = (vec_a, vec_b) if len(vec_a) <= len(vec_b) else (vec_b, vec_a)
-                dot = sum(val * larger.get(tok, 0.0) for tok, val in smaller.items())
-                sim = dot / (mag_a * mag_b)
+            # Row i in sparse matrix
+            row = sim_mat.getrow(i)
+            for j, sim_val in zip(row.indices, row.data):
+                if j <= i:
+                    continue
+                p_b = valid[j]
+                if abs(p_b["_ts"] - ts_a) > max_window_sec:
+                    continue
+                if p_a["did"] == p_b["did"]:
+                    continue
 
-            if sim >= threshold:
-                key = _pair_key(p_a["did"], p_b["did"])
-                existing = best_pairs.get(key)
-                if existing:
-                    existing["strength"] = max(existing["strength"], round(sim, 4))
-                    existing["exact"] = existing["exact"] or is_exact
+                is_exact = norm_a == texts[j]
+                sim = 1.0 if is_exact else float(sim_val)
+
+                if sim >= threshold:
+                    key = _pair_key(p_a["did"], p_b["did"])
+                    existing = best_pairs.get(key)
+                    if existing:
+                        existing["strength"] = max(existing["strength"], round(sim, 4))
+                        existing["exact"] = existing["exact"] or is_exact
+                    else:
+                        best_pairs[key] = {
+                            "did_a": key[0],
+                            "did_b": key[1],
+                            "strength": round(min(1.0, sim), 4),
+                            "exact": is_exact,
+                        }
+    else:
+        # Fallback pure-Python char 3-gram TF-IDF implementation
+        grams_list = [_char_ngrams(p.get("text_norm") or p.get("textNorm", ""), 3) for p in valid]
+        df: Counter = Counter()
+        for g in grams_list:
+            for token in g.keys():
+                df[token] += 1
+
+        tfidf_vecs: List[Tuple[Dict[str, float], float]] = []
+        for g in grams_list:
+            v_dict: Dict[str, float] = {}
+            norm_sq = 0.0
+            for token, count in g.items():
+                idf = math.log(1.0 + n_docs / (1.0 + df[token]))
+                val = (1.0 + math.log(count)) * idf
+                v_dict[token] = val
+                norm_sq += val * val
+            tfidf_vecs.append((v_dict, math.sqrt(norm_sq) or 1.0))
+
+        for i in range(n_docs):
+            p_a = valid[i]
+            norm_a = p_a.get("text_norm") or p_a.get("textNorm", "")
+            vec_a, mag_a = tfidf_vecs[i]
+
+            for j in range(i + 1, n_docs):
+                p_b = valid[j]
+                if abs(p_b["_ts"] - p_a["_ts"]) > max_window_sec:
+                    break
+                if p_a["did"] == p_b["did"]:
+                    continue
+
+                norm_b = p_b.get("text_norm") or p_b.get("textNorm", "")
+                is_exact = norm_a == norm_b
+                if is_exact:
+                    sim = 1.0
                 else:
-                    best_pairs[key] = {
-                        "did_a": key[0],
-                        "did_b": key[1],
-                        "strength": round(min(1.0, sim), 4),
-                        "exact": is_exact,
-                    }
+                    vec_b, mag_b = tfidf_vecs[j]
+                    smaller, larger = (vec_a, vec_b) if len(vec_a) <= len(vec_b) else (vec_b, vec_a)
+                    dot = sum(val * larger.get(tok, 0.0) for tok, val in smaller.items())
+                    sim = dot / (mag_a * mag_b)
+
+                if sim >= threshold:
+                    key = _pair_key(p_a["did"], p_b["did"])
+                    existing = best_pairs.get(key)
+                    if existing:
+                        existing["strength"] = max(existing["strength"], round(sim, 4))
+                        existing["exact"] = existing["exact"] or is_exact
+                    else:
+                        best_pairs[key] = {
+                            "did_a": key[0],
+                            "did_b": key[1],
+                            "strength": round(min(1.0, sim), 4),
+                            "exact": is_exact,
+                        }
 
     results: List[Dict[str, Any]] = []
     for item in best_pairs.values():

@@ -263,6 +263,11 @@ async def run_jetstream_ingestor():
                     if not isinstance(text, str) or not text.strip():
                         continue
 
+                    # C7: Language filter (filters out non-English posts when langs is specified)
+                    langs = record.get("langs") or []
+                    if langs and not any(isinstance(lang, str) and lang.lower().startswith("en") for lang in langs):
+                        continue
+
                     # D1: Check matching topics in memory (fast)
                     matched_topics = topic_registry.match(text)
                     if not matched_topics:
