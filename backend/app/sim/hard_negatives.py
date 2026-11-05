@@ -312,3 +312,4 @@ def generate_hard_negative(
         "dids": dids,
         "size": len(dids),
     }
+

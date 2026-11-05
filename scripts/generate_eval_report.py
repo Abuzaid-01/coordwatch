@@ -91,3 +91,4 @@ def generate_markdown() -> str:
 if __name__ == "__main__":
     report_md = generate_markdown()
     print(report_md)
+

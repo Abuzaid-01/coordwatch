@@ -216,3 +216,4 @@ def generate_bot_family(
         "dids": dids,
         "size": size,
     }
+
