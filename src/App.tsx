@@ -42,6 +42,7 @@ export default function App() {
   const [newKeyword, setNewKeyword] = useState('');
   const [trackingStatus, setTrackingStatus] = useState('');
   const [inspectedCluster, setInspectedCluster] = useState<ClusterDetail | null>(null);
+  const [revealHandles, setRevealHandles] = useState(false);
   const [health, setHealth] = useState<any>(null);
   const pollRef = useRef<number>();
 
@@ -129,12 +130,6 @@ export default function App() {
   const currentTopicObj = topics.find(t => t.id === selectedTopic);
   const isDemoTopic = currentTopicObj?.source === 'demo' || currentTopicObj?.id === 1;
 
-  // ── RENDER ──
-  // Cluster inspector overlay
-  if (inspectedCluster) {
-    return <ClusterInspector cluster={inspectedCluster} onBack={() => setInspectedCluster(null)} />;
-  }
-
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
       {/* ── NAV ── */}
@@ -152,8 +147,15 @@ export default function App() {
                 {v === 'dashboard' ? '📊 Dashboard' : v === 'evaluation' ? '🔬 Evaluation Lab' : '📋 Ethics & Docs'}
               </button>
             ))}
+            <button
+              onClick={() => setRevealHandles(!revealHandles)}
+              className="ml-2 px-2.5 py-1 text-xs font-mono rounded-lg border border-gray-700 bg-gray-850 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors"
+              title="Toggle between deterministic privacy aliases (A-xxxx) and raw Bluesky handles per Phase 9 Ethics Policy"
+            >
+              {revealHandles ? '👁️ Handles' : '🔒 Privacy Aliases'}
+            </button>
             {health && (
-              <div className="flex items-center gap-1.5 ml-4 text-xs">
+              <div className="flex items-center gap-1.5 ml-3 text-xs">
                 <div className={`w-2 h-2 rounded-full ${health.jetstream?.connected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
                 <span className="text-gray-400">{health.jetstream?.connected ? 'JETSTREAM LIVE' : 'OFFLINE'}</span>
               </div>
@@ -235,10 +237,23 @@ export default function App() {
           <section className="bg-gray-900 rounded-xl p-4 border border-gray-800">
             <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Coordination Network Graph</h2>
             {graphData && graphData.nodes?.length > 0 ? (
-              <NetworkGraphCanvas graphData={graphData} onNodeClick={(nodeId) => {
-                const cl = clusters.find(c => c.members?.some(m => m.did === nodeId) || c.memberDids?.includes(nodeId));
-                if (cl) setInspectedCluster(cl);
-              }} />
+              <NetworkGraphCanvas
+                graphData={graphData}
+                selectedClusterId={inspectedCluster?.id || null}
+                revealHandles={revealHandles}
+                onSelectCluster={(cid) => {
+                  if (cid) {
+                    const cl = clusters.find(c => c.id === cid);
+                    if (cl) setInspectedCluster(cl);
+                  } else {
+                    setInspectedCluster(null);
+                  }
+                }}
+                onNodeClick={(nodeId) => {
+                  const cl = clusters.find(c => c.members?.some(m => m.did === nodeId) || c.memberDids?.includes(nodeId));
+                  if (cl) setInspectedCluster(cl);
+                }}
+              />
             ) : (
               <div className="h-64 flex items-center justify-center text-gray-600">
                 <p>No coordination graph data yet. Track a topic and wait for analysis.</p>
@@ -333,6 +348,31 @@ export default function App() {
             )}
           </section>
         </main>
+      )}
+
+      {/* ── Cluster Inspector Modal Overlay ── */}
+      {inspectedCluster && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 md:p-6"
+          onClick={() => setInspectedCluster(null)}
+        >
+          <div
+            className="bg-[#0E121B] border border-slate-800 rounded-xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ClusterInspector
+              cluster={inspectedCluster}
+              clusters={clusters}
+              revealHandles={revealHandles}
+              onToggleRevealHandles={() => setRevealHandles(!revealHandles)}
+              onSelectCluster={(cid) => {
+                const cl = clusters.find((c) => c.id === cid);
+                if (cl) setInspectedCluster(cl);
+              }}
+              onBack={() => setInspectedCluster(null)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

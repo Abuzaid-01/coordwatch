@@ -389,8 +389,11 @@ def mark_account_enriched(
         conn.close()
 
 
-def insert_live_post(p: Dict[str, Any]) -> bool:
-    conn = get_connection()
+def insert_live_post(p: Dict[str, Any], conn: Optional[sqlite3.Connection] = None) -> bool:
+    own_conn = False
+    if conn is None:
+        conn = get_connection()
+        own_conn = True
     try:
         cur = conn.execute(
             """
@@ -409,10 +412,12 @@ def insert_live_post(p: Dict[str, Any]) -> bool:
                 p.get("source", "live"),
             ),
         )
-        conn.commit()
+        if own_conn:
+            conn.commit()
         return cur.rowcount > 0
     finally:
-        conn.close()
+        if own_conn:
+            conn.close()
 
 
 def upsert_account(acc: Dict[str, Any], conn: Optional[sqlite3.Connection] = None) -> None:

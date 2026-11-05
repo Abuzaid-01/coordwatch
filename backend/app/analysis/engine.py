@@ -272,10 +272,17 @@ def run_topic_analysis(
     graph_nodes = []
     for did in selected_dids:
         cl_info = node_cluster_map.get(did)
+        acc = acc_map.get(did, {})
+        alias = cl_info["alias"] if cl_info else (acc.get("alias") or f"A-{did[-6:].upper()}")
+        handle = acc.get("handle") or f"{did[-8:]}.bsky.social"
+        cluster_id = cl_info["cluster_id"] if cl_info else None
         graph_nodes.append({
             "id": did,
-            "label": cl_info["alias"] if cl_info else f"A-{did[-6:].upper()}",
-            "cluster": cl_info["cluster_id"] if cl_info else "unassigned",
+            "alias": alias,
+            "label": alias,
+            "handle": handle,
+            "clusterId": cluster_id,
+            "cluster": cluster_id or "unassigned",
             "score": cl_info["score"] if cl_info else 0,
             "postCount": post_counts_by_did.get(did, 0),
         })

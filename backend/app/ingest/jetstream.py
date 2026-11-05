@@ -183,9 +183,10 @@ async def _batch_insert_worker():
                 try:
                     for item in batch:
                         upsert_account(item["account"], conn=conn)
-                        insert_live_post(item["post"])
+                        insert_live_post(item["post"], conn=conn)
                         ingest_state.live_posts_ingested += 1
                         ingest_state.dirty_topics.add(item["post"]["topic_id"])
+                    conn.commit()
                 finally:
                     conn.close()
 

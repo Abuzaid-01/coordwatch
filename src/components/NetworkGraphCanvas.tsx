@@ -120,10 +120,12 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
     const organicNodes: GraphNode[] = [];
 
     for (const n of graph.nodes) {
-      if (n.clusterId) {
-        const list = clusterGroups.get(n.clusterId) || [];
+      const cid = n.clusterId || (n.cluster && n.cluster !== 'unassigned' && n.cluster !== 'unknown' ? n.cluster : null);
+      if (cid) {
+        n.clusterId = cid;
+        const list = clusterGroups.get(cid) || [];
         list.push(n);
-        clusterGroups.set(n.clusterId, list);
+        clusterGroups.set(cid, list);
       } else {
         organicNodes.push(n);
       }
@@ -287,9 +289,12 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
         isHovered ||
         (node.isSeedLabel && node.clusterId === selectedClusterId && !activeEgoNode)
       ) {
+        const alias = node.alias || node.label || (`A-${node.id.slice(-6).toUpperCase()}`);
+        const handle = node.handle || (`${node.id.slice(-8)}.bsky.social`);
+        const cid = node.clusterId || (node.cluster && node.cluster !== 'unassigned' && node.cluster !== 'unknown' ? node.cluster : null);
         const label = revealHandles
-          ? node.handle.replace('.bsky.social', '')
-          : `${node.alias} (${node.clusterId || 'org'})`;
+          ? handle.replace('.bsky.social', '')
+          : `${alias} (${cid || 'org'})`;
         const fontSize = Math.max(8.5, 10.5 / Math.max(0.85, globalScale));
         ctx.font = `600 ${fontSize}px "JetBrains Mono", monospace`;
         const tw = ctx.measureText(label).width;
@@ -756,8 +761,8 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
         <div className="font-mono text-slate-400 tabular-nums">
           {activeEgoNode ? (
             <span className="text-sky-300">
-              Node {revealHandles ? activeEgoNode.handle : activeEgoNode.alias} ·{' '}
-              {activeEgoNode.clusterId || 'Organic'} · Score {activeEgoNode.score}/100 ·{' '}
+              Node {revealHandles ? (activeEgoNode.handle || activeEgoNode.id) : (activeEgoNode.alias || activeEgoNode.label || `A-${activeEgoNode.id.slice(-6).toUpperCase()}`)} ·{' '}
+              {activeEgoNode.clusterId || (activeEgoNode.cluster && activeEgoNode.cluster !== 'unassigned' ? activeEgoNode.cluster : null) || 'Organic'} · Score {activeEgoNode.score}/100 ·{' '}
               {Math.max(0, egoNeighbors.size - 1)} connected peers
             </span>
           ) : (

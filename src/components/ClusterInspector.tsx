@@ -3,18 +3,20 @@ import { ClusterResult } from '../types';
 
 interface ClusterInspectorProps {
   cluster: ClusterResult | null;
-  clusters: ClusterResult[];
-  onSelectCluster: (clusterId: string) => void;
-  revealHandles: boolean;
-  onToggleRevealHandles: () => void;
+  clusters?: ClusterResult[];
+  onSelectCluster?: (clusterId: string) => void;
+  revealHandles?: boolean;
+  onToggleRevealHandles?: () => void;
+  onBack?: () => void;
 }
 
 export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
   cluster,
-  clusters,
-  onSelectCluster,
-  revealHandles,
+  clusters = [],
+  onSelectCluster = () => {},
+  revealHandles = false,
   onToggleRevealHandles,
+  onBack,
 }) => {
   const [dossierTab, setDossierTab] = useState<'evidence' | 'posts' | 'cohort'>('evidence');
   const [showNormalizedText, setShowNormalizedText] = useState(false);
@@ -26,9 +28,20 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
         className="bg-[#0E121B] border border-slate-800/90 rounded-lg p-6 flex flex-col justify-between h-full"
       >
         <div>
-          <h2 className="text-sm font-semibold text-slate-100">
-            Forensic Cluster Dossier
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-100">
+              Forensic Cluster Dossier
+            </h2>
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="px-2.5 py-1 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded transition-colors"
+              >
+                ✕ Close
+              </button>
+            )}
+          </div>
           <p className="text-xs text-slate-400 mt-2 leading-relaxed">
             Select any Louvain community in the network graph or table to inspect its mathematical signal weights, plain-English evidence chain, and SHA-256 actor cohort.
           </p>
@@ -37,37 +50,46 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
     );
   }
 
+  const score = cluster.score ?? (cluster as any).coordinationScore ?? 0;
+  const rawScore = cluster.rawScore ?? score;
+  const discountApplied = cluster.discountApplied ?? 0;
+  const size = cluster.size ?? cluster.members?.length ?? (cluster as any).memberCount ?? 0;
+  const signals = cluster.signals || { text: 0, timing: 0, age: 0, links: 0 };
+  const examplePosts = cluster.examplePosts || [];
+  const members = cluster.members || [];
+  const reasons = cluster.reasons || (cluster as any).evidence || [];
+
   const severityLabel =
-    cluster.score >= 70
+    score >= 70
       ? 'High-Confidence Coordinated Network'
-      : cluster.score >= 50
+      : score >= 50
         ? 'Elevated Coordination Pattern'
         : 'Discounted Organic News Burst';
 
   const severityColor =
-    cluster.score >= 70
+    score >= 70
       ? 'text-red-400'
-      : cluster.score >= 50
+      : score >= 50
         ? 'text-orange-400'
         : 'text-amber-300';
 
   const gaugeStrokeColor =
-    cluster.score >= 70
+    score >= 70
       ? '#EF4444'
-      : cluster.score >= 50
+      : score >= 50
         ? '#F97316'
         : '#EAB308';
 
-  const textPts = (35 * cluster.signals.text).toFixed(1);
-  const timingPts = (25 * cluster.signals.timing).toFixed(1);
-  const agePts = (20 * cluster.signals.age).toFixed(1);
-  const linksPts = (20 * cluster.signals.links).toFixed(1);
+  const textPts = (35 * (signals.text || 0)).toFixed(1);
+  const timingPts = (25 * (signals.timing || 0)).toFixed(1);
+  const agePts = (20 * (signals.age || 0)).toFixed(1);
+  const linksPts = (20 * (signals.links || 0)).toFixed(1);
 
   const signalRows = [
     {
       name: 'Text Similarity',
       weightLabel: '0.35 weight',
-      value: cluster.signals.text,
+      value: signals.text || 0,
       pts: textPts,
       maxPts: 35,
       desc: 'Exact text_norm hash + char 3-gram TF-IDF cosine',
@@ -75,7 +97,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
     {
       name: 'Timing Synchronization',
       weightLabel: '0.25 weight',
-      value: cluster.signals.timing,
+      value: signals.timing || 0,
       pts: timingPts,
       maxPts: 25,
       desc: 'Co-posting burst (<60s) + interval cadence regularity',
@@ -83,7 +105,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
     {
       name: 'Account Age Cohort',
       weightLabel: '0.20 weight',
-      value: cluster.signals.age,
+      value: signals.age || 0,
       pts: agePts,
       maxPts: 20,
       desc: '48-hour registration batch density via plc.directory',
@@ -91,7 +113,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
     {
       name: 'Shared Links & Hashtags',
       weightLabel: '0.20 weight',
-      value: cluster.signals.links,
+      value: signals.links || 0,
       pts: linksPts,
       maxPts: 20,
       desc: 'Canonical URL & campaign hashtag Jaccard overlap',
@@ -102,7 +124,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
   const radius = 28;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset =
-    circumference - (Math.min(100, Math.max(0, cluster.score)) / 100) * circumference;
+    circumference - (Math.min(100, Math.max(0, score)) / 100) * circumference;
 
   return (
     <aside
@@ -112,28 +134,42 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
       <div>
         {/* Top Cluster Switcher Bar */}
         <div className="px-4 py-3 bg-[#0B0E16] border-b border-slate-800/90 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-xs font-semibold text-slate-200 tracking-tight">
-            Forensic Cluster Dossier
-          </span>
+          <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="px-2.5 py-1 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded transition-colors flex items-center gap-1.5"
+              >
+                ← Back to Dashboard
+              </button>
+            )}
+            <span className="text-xs font-semibold text-slate-200 tracking-tight">
+              Forensic Cluster Dossier
+            </span>
+          </div>
           <div
             className="flex flex-wrap items-center gap-1"
             role="group"
             aria-label="Switch active cluster"
           >
-            {clusters.slice(0, 6).map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => onSelectCluster(c.id)}
-                className={`px-2.5 py-1 text-xs font-mono rounded transition-colors whitespace-nowrap shrink-0 ${
-                  c.id === cluster.id
-                    ? 'bg-sky-600 text-white font-semibold'
-                    : 'bg-[#090B10] text-slate-400 hover:text-slate-200 border border-slate-800'
-                }`}
-              >
-                {c.id} ({c.score})
-              </button>
-            ))}
+            {(clusters || []).slice(0, 8).map((c) => {
+              const cScore = c.score ?? (c as any).coordinationScore ?? 0;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => onSelectCluster(c.id)}
+                  className={`px-2.5 py-1 text-xs font-mono rounded transition-colors whitespace-nowrap shrink-0 ${
+                    c.id === cluster.id
+                      ? 'bg-sky-600 text-white font-semibold'
+                      : 'bg-[#090B10] text-slate-400 hover:text-slate-200 border border-slate-800'
+                  }`}
+                >
+                  {c.id} ({cScore})
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -151,11 +187,11 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-1 font-mono tabular-nums">
-                {cluster.size} accounts · {cluster.examplePosts.length} captured posts · Raw Score {cluster.rawScore}/100
+                {size} accounts · {examplePosts.length} captured posts · Raw Score {rawScore}/100
               </p>
-              {cluster.discountApplied > 0 ? (
+              {discountApplied > 0 ? (
                 <div className="text-[11px] font-mono text-amber-400 mt-1 tabular-nums">
-                  -{Math.round(cluster.discountApplied * 100)}% Organic News-Burst Discount Applied
+                  -{Math.round(discountApplied * 100)}% Organic News-Burst Discount Applied
                 </div>
               ) : (
                 <div className="text-[11px] font-mono text-slate-400 mt-1 tabular-nums">
@@ -189,7 +225,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center font-mono tabular-nums">
                 <span className={`text-lg font-bold leading-none ${severityColor}`}>
-                  {cluster.score}
+                  {score}
                 </span>
                 <span className="text-[9px] text-slate-500 mt-0.5">/100</span>
               </div>
@@ -200,7 +236,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
           <div className="mt-3 pt-2.5 border-t border-slate-800/70 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-slate-400 tabular-nums">
             <span>Score = 100 × (0.35·T + 0.25·S + 0.20·A + 0.20·L)</span>
             <span className="text-slate-200">
-              {textPts} + {timingPts} + {agePts} + {linksPts} = {cluster.rawScore} pts
+              {textPts} + {timingPts} + {agePts} + {linksPts} = {rawScore} pts
             </span>
           </div>
         </div>
@@ -228,7 +264,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
-              Captured Posts ({cluster.examplePosts.length})
+              Captured Posts ({examplePosts.length})
             </button>
             <button
               type="button"
@@ -239,17 +275,19 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
                   : 'border-transparent text-slate-400 hover:text-slate-200'
               }`}
             >
-              Actor Cohort ({cluster.members.length})
+              Actor Cohort ({members.length})
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={onToggleRevealHandles}
-            className="mb-2 px-2.5 py-1 text-[11px] font-medium bg-[#090B10] hover:bg-slate-800 text-slate-300 border border-slate-700 rounded transition-colors whitespace-nowrap shrink-0"
-          >
-            {revealHandles ? 'Hide Handles (Use Aliases)' : 'Reveal Handles'}
-          </button>
+          {onToggleRevealHandles && (
+            <button
+              type="button"
+              onClick={onToggleRevealHandles}
+              className="mb-2 px-2.5 py-1 text-[11px] font-medium bg-[#090B10] hover:bg-slate-800 text-slate-300 border border-slate-700 rounded transition-colors whitespace-nowrap shrink-0"
+            >
+              {revealHandles ? 'Hide Handles (Use Aliases)' : 'Reveal Handles'}
+            </button>
+          )}
         </div>
 
         {/* Tab 1: Explainable Evidence & 4-Signal Breakdown */}
@@ -293,7 +331,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
                 Why Flagged (Plain-English Evidence Chain)
               </h3>
               <ul className="mt-2.5 space-y-2 text-xs text-slate-300 leading-relaxed">
-                {cluster.reasons.map((reason, idx) => (
+                {reasons.map((reason, idx) => (
                   <li
                     key={idx}
                     className="p-2.5 bg-[#090B10] border border-slate-800/80 rounded flex items-start gap-2.5"
@@ -322,7 +360,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
                 </button>
               </div>
               <div className="space-y-2">
-                {cluster.examplePosts.slice(0, 2).map((post) => (
+                {examplePosts.slice(0, 2).map((post) => (
                   <div
                     key={post.id}
                     className="p-2.5 bg-[#090B10] border border-slate-800/80 rounded text-xs"
@@ -331,7 +369,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
                       <span className="text-slate-200 font-semibold">
                         {revealHandles ? post.handle : post.alias}
                       </span>
-                      <span>{post.createdAt.slice(11, 19)} UTC</span>
+                      <span>{post.createdAt ? post.createdAt.slice(11, 19) : ''} UTC</span>
                     </div>
                     <p className="mt-1 text-slate-300 leading-relaxed line-clamp-2">
                       {showNormalizedText ? (
@@ -365,7 +403,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
             </div>
 
             <div className="space-y-2.5 max-h-[430px] overflow-y-auto pr-1">
-              {cluster.examplePosts.map((post) => (
+              {examplePosts.map((post) => (
                 <div
                   key={post.id}
                   className="p-3 bg-[#090B10] border border-slate-800/90 rounded text-xs space-y-1.5"
@@ -374,7 +412,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
                     <span className="text-slate-100 font-semibold">
                       {revealHandles ? post.handle : post.alias}
                     </span>
-                    <span>{post.createdAt.slice(0, 19).replace('T', ' ')} UTC</span>
+                    <span>{post.createdAt ? post.createdAt.slice(0, 19).replace('T', ' ') : ''} UTC</span>
                   </div>
                   <p className="text-slate-300 leading-relaxed break-words">
                     {showNormalizedText ? (
@@ -383,10 +421,10 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
                       post.text
                     )}
                   </p>
-                  {(post.links.length > 0 || post.hashtags.length > 0) && (
+                  {(post.links && post.links.length > 0 || post.hashtags && post.hashtags.length > 0) && (
                     <div className="pt-1 border-t border-slate-800/60 text-[11px] font-mono text-slate-400">
-                      {post.links.length > 0 && <span>URL: {post.links[0]} </span>}
-                      {post.hashtags.length > 0 && (
+                      {post.links && post.links.length > 0 && <span>URL: {post.links[0]} </span>}
+                      {post.hashtags && post.hashtags.length > 0 && (
                         <span>· Tags: {post.hashtags.join(' ')}</span>
                       )}
                     </div>
@@ -417,7 +455,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
-                  {cluster.members.map((m) => (
+                  {members.map((m) => (
                     <tr key={m.did} className="hover:bg-slate-900/50">
                       <td className="py-2 px-3 text-slate-200 font-semibold truncate max-w-[160px]">
                         {revealHandles ? m.handle : m.alias}
@@ -443,7 +481,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
       {/* Dossier Footer Note */}
       <div className="px-4 py-2.5 bg-[#0B0E16] border-t border-slate-800/90 flex items-center justify-between text-[11px] text-slate-400 font-mono tabular-nums">
         <span>Community Algorithm: Louvain Modularity</span>
-        <span>Updated {cluster.computedAt.slice(11, 19)} UTC</span>
+        <span>Updated {cluster.computedAt ? cluster.computedAt.slice(11, 19) : new Date().toISOString().slice(11, 19)} UTC</span>
       </div>
     </aside>
   );
