@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: coordwatch-backend
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./data:/app/data
+    environment:
+      - COORDWATCH_DB_PATH=/app/data/coordwatch.db
+      - JETSTREAM_URL=wss://jetstream2.us-east.bsky.network/subscribe?wantedCollections=app.bsky.feed.post
+      - PLC_DIRECTORY_URL=https://plc.directory
+      - BSKY_PUBLIC_API_URL=https://public.api.bsky.app
+    ports:
+      - "8000:8000"
+
+  frontend:
+    image: node:22-alpine
+    container_name: coordwatch-frontend
+    working_dir: /app
+    command: sh -c "npm install && npm run build && npm run preview -- --host 0.0.0.0 --port 3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
