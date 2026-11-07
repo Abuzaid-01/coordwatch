@@ -35,6 +35,8 @@ export const EthicsAndDocsView: React.FC<EthicsAndDocsViewProps> = ({ activeTopi
       if (res.ok) {
         const data: PythonVerifyResponse = await res.json();
         setPyVerify(data);
+      } else {
+        setPyVerify(null);
       }
     } finally {
       setIsRunningPyTests(false);
@@ -48,6 +50,8 @@ export const EthicsAndDocsView: React.FC<EthicsAndDocsViewProps> = ({ activeTopi
       if (res.ok) {
         const data = await res.json();
         setPySourceContent(data.content || '');
+      } else {
+        setPySourceContent(`# ${res.status} from /api/python-backend/source\n# The dashboard monitor, graph, clusters, timeline, and evaluation routes are separate and still live.`);
       }
     } catch {
       setPySourceContent('# Unable to load file content');
@@ -89,23 +93,23 @@ I'd really value your feedback if someone on your team has a few minutes to take
       {/* Section 1: Live Python FastAPI Backend & Signal Suite Explorer */}
       <section
         aria-label="Python FastAPI Backend Architecture and Live Test Runner"
-        className="bg-[#0E121B] border border-slate-800/90 rounded-lg overflow-hidden"
+        className="bg-[rgba(16,36,66,0.42)] backdrop-blur-xl border border-white/10 rounded-[26px] overflow-hidden"
       >
-        <div className="px-6 py-4 bg-[#0B0E16] border-b border-slate-800/90 flex flex-wrap items-center justify-between gap-4">
+        <div className="px-6 py-4 bg-[rgba(8,20,42,0.5)] border-b border-white/10 flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-slate-100 font-display tracking-tight">
+              <h1 className="text-base font-bold text-[#F6F1E8] font-display tracking-tight">
                 Python FastAPI Backend (`/backend/app/`) &amp; Live Unit Test Verification
               </h1>
               {pyVerify?.passed && (
-                <span className="flex items-center gap-1 text-xs font-mono text-emerald-400">
+                <span className="flex items-center gap-1 text-xs font-mono text-[#C5DCCB]">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   6/6 Python Signal &amp; Simulator Tests Passing
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Complete Python 3.10+ FastAPI + NetworkX + Scikit-Learn TF-IDF + SQLite codebase per Section 3 &amp; 4 of the Implementation Plan, verified live via <code className="text-slate-200">/usr/bin/python3 -m unittest backend/tests/test_signals.py -v</code>.
+            <p className="text-xs text-[#B6AC9E] mt-1">
+              Complete Python 3.10+ FastAPI + NetworkX + Scikit-Learn TF-IDF + SQLite codebase per Section 3 &amp; 4 of the Implementation Plan, verified live via <code className="text-[#E8DFD2]">/usr/bin/python3 -m unittest backend/tests/test_signals.py -v</code>.
             </p>
           </div>
 
@@ -113,26 +117,31 @@ I'd really value your feedback if someone on your team has a few minutes to take
             type="button"
             disabled={isRunningPyTests}
             onClick={runPythonVerification}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded transition-colors whitespace-nowrap shrink-0"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#FFF8F3] bg-[#C46B56] hover:bg-[#D48470] disabled:opacity-50 rounded transition-colors whitespace-nowrap shrink-0"
           >
             <Play className="w-3.5 h-3.5" />
             {isRunningPyTests ? 'Running Python Tests...' : 'Run Python Signal Tests Live'}
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-800/90">
+        <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-white/10">
           {/* Left 4 Cols: Python Backend File Tree + Test Runner Output */}
-          <div className="lg:col-span-5 p-4 space-y-4 bg-[#090B10]/50">
+          <div className="lg:col-span-5 p-4 space-y-4 bg-[rgba(7,18,36,0.4)]">
             <div>
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-200 mb-2">
+              <div className="flex items-center justify-between text-xs font-semibold text-[#E8DFD2] mb-2">
                 <span className="flex items-center gap-1.5">
-                  <FileCode2 className="w-3.5 h-3.5 text-sky-400" />
-                  Python FastAPI Project Tree ({pyVerify?.files.length || 17} files)
+                  <FileCode2 className="w-3.5 h-3.5 text-[#F0B5A2]" />
+                  Python FastAPI Project Tree ({pyVerify?.files.length ?? 0} files)
                 </span>
-                <span className="text-[11px] font-mono text-slate-400">Click to inspect source</span>
+                <span className="text-[11px] font-mono text-[#B6AC9E]">Click to inspect source</span>
               </div>
 
-              <div className="max-h-60 overflow-y-auto border border-slate-800 rounded bg-[#090B10] divide-y divide-slate-800/60">
+              <div className="max-h-60 overflow-y-auto border border-white/10 rounded bg-[rgba(7,18,36,0.55)] divide-y divide-white/[0.08]">
+                {(pyVerify?.files || []).length === 0 && (
+                  <p className="px-3 py-3 text-xs text-[#B6AC9E]">
+                    No file list yet. /api/python-backend/verify did not return one.
+                  </p>
+                )}
                 {(pyVerify?.files || []).map((f) => (
                   <button
                     key={f.path}
@@ -140,12 +149,12 @@ I'd really value your feedback if someone on your team has a few minutes to take
                     onClick={() => loadPythonSource(f.path)}
                     className={`w-full px-3 py-1.5 text-left text-xs font-mono flex items-center justify-between transition-colors ${
                       selectedPyFile === f.path
-                        ? 'bg-sky-950/50 text-sky-300 font-semibold'
-                        : 'text-slate-300 hover:bg-slate-900'
+                        ? 'bg-[rgba(224,122,98,0.18)] text-[#F6C7B6] font-semibold'
+                        : 'text-[#D4CBBE] hover:bg-white/[0.04]'
                     }`}
                   >
                     <span className="truncate">{f.path}</span>
-                    <span className="text-[10px] text-slate-500 tabular-nums shrink-0 ml-2">
+                    <span className="text-[10px] text-[#8E867C] tabular-nums shrink-0 ml-2">
                       {(f.sizeBytes / 1024).toFixed(1)} KB
                     </span>
                   </button>
@@ -154,36 +163,36 @@ I'd really value your feedback if someone on your team has a few minutes to take
             </div>
 
             <div>
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-200 mb-1.5">
+              <div className="flex items-center justify-between text-xs font-semibold text-[#E8DFD2] mb-1.5">
                 <span className="flex items-center gap-1.5">
-                  <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+                  <Terminal className="w-3.5 h-3.5 text-[#C5DCCB]" />
                   Live Python Test Output (`backend/tests/test_signals.py`)
                 </span>
-                <span className="text-[11px] font-mono text-emerald-400">
+                <span className="text-[11px] font-mono text-[#C5DCCB]">
                   {pyVerify?.pythonExecutable || '/usr/bin/python3'}
                 </span>
               </div>
               <pre
                 data-testid="python-test-output"
-                className="p-3 bg-[#090B10] border border-slate-800 rounded text-[11px] font-mono text-emerald-300 max-h-44 overflow-auto leading-relaxed"
+                className="p-3 bg-[rgba(7,18,36,0.55)] border border-white/10 rounded text-[11px] font-mono text-[#D5E8DC] max-h-44 overflow-auto leading-relaxed"
               >
-                {pyVerify?.output || 'Running python3 -m unittest backend/tests/test_signals.py -v...'}
+                {pyVerify?.output || (isRunningPyTests ? 'Running python3 -m unittest backend/tests/test_signals.py -v...' : 'No test log returned from /api/python-backend/verify.')}
               </pre>
             </div>
           </div>
 
           {/* Right 8 Cols: Live Python Source Code Viewer */}
-          <div className="lg:col-span-7 p-4 flex flex-col justify-between bg-[#0E121B]">
+          <div className="lg:col-span-7 p-4 flex flex-col justify-between bg-[rgba(16,36,66,0.42)] backdrop-blur-xl">
             <div>
-              <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800">
-                <span className="text-xs font-mono font-semibold text-sky-300">
+              <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/10">
+                <span className="text-xs font-mono font-semibold text-[#F6C7B6]">
                   /{selectedPyFile}
                 </span>
-                <span className="text-[11px] font-mono text-slate-400">
+                <span className="text-[11px] font-mono text-[#B6AC9E]">
                   Python 3.10+ · FastAPI · NetworkX · Scikit-Learn
                 </span>
               </div>
-              <pre className="p-3.5 bg-[#090B10] border border-slate-800/90 rounded text-[11.5px] font-mono text-slate-200 h-[380px] overflow-auto leading-relaxed">
+              <pre className="p-3.5 bg-[rgba(7,18,36,0.55)] border border-white/10 rounded text-[11.5px] font-mono text-[#E8DFD2] h-[380px] overflow-auto leading-relaxed">
                 {pySourceContent}
               </pre>
             </div>
@@ -192,41 +201,41 @@ I'd really value your feedback if someone on your team has a few minutes to take
       </section>
 
       {/* Section 2: Phase 9 Ethical Safeguards Banner */}
-      <div className="bg-[#0E121B] border border-slate-800/90 rounded-lg overflow-hidden">
-        <div className="px-6 py-5 bg-[#0B0E16] border-b border-slate-800/90">
-          <h2 className="text-base font-bold text-slate-100 font-display tracking-tight">
+      <div className="bg-[rgba(16,36,66,0.42)] backdrop-blur-xl border border-white/10 rounded-[26px] overflow-hidden">
+        <div className="px-6 py-5 bg-[rgba(8,20,42,0.5)] border-b border-white/10">
+          <h2 className="text-base font-bold text-[#F6F1E8] font-display tracking-tight">
             Phase 9: Methodology, Limitations &amp; Ethical Safeguards
           </h2>
-          <p className="text-sm text-slate-300 mt-1.5 leading-relaxed max-w-3xl">
-            CoordWatch surfaces <strong className="text-slate-100">coordinated-behavior patterns, not proof of bots</strong>. Synchronized posting, shared links, and tight account creation windows indicate non-independent amplification, which can include automated bot rings, paid campaign networks, or organized activist flash-mobs.
+          <p className="text-sm text-[#D4CBBE] mt-1.5 leading-relaxed max-w-3xl">
+            CoordWatch surfaces <strong className="text-[#F6F1E8]">coordinated-behavior patterns, not proof of bots</strong>. Synchronized posting, shared links, and tight account creation windows indicate non-independent amplification, which can include automated bot rings, paid campaign networks, or organized activist flash-mobs.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-800/90">
+        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
           <div className="p-5">
-            <h3 className="text-sm font-semibold text-slate-100">
+            <h3 className="text-sm font-semibold text-[#F6F1E8]">
               01. Cryptographic Alias Default (`A-xxxx`)
             </h3>
-            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-              Every Bluesky DID is hashed via SHA-256 into a deterministic short alias (such as <code className="text-slate-200">A-7f3a</code>). The dashboard displays aliases by default so analysts can evaluate structural network topology without publishing named accusations against individual accounts.
+            <p className="text-xs text-[#B6AC9E] mt-1.5 leading-relaxed">
+              Every Bluesky DID is hashed via SHA-256 into a deterministic short alias (such as <code className="text-[#E8DFD2]">A-7f3a</code>). The dashboard displays aliases by default so analysts can evaluate structural network topology without publishing named accusations against individual accounts.
             </p>
           </div>
 
           <div className="p-5">
-            <h3 className="text-sm font-semibold text-slate-100">
+            <h3 className="text-sm font-semibold text-[#F6F1E8]">
               02. Public Protocol Telemetry Only
             </h3>
-            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-              Ingestion reads strictly public <code className="text-slate-200">app.bsky.feed.post</code> records from Bluesky’s official Jetstream WebSocket and public <code className="text-slate-200">plc.directory</code> audit timestamps, respecting rate limits with a 5-request concurrency cap and SQLite caching.
+            <p className="text-xs text-[#B6AC9E] mt-1.5 leading-relaxed">
+              Ingestion reads strictly public <code className="text-[#E8DFD2]">app.bsky.feed.post</code> records from Bluesky’s official Jetstream WebSocket and public <code className="text-[#E8DFD2]">plc.directory</code> audit timestamps, respecting rate limits with a 5-request concurrency cap and SQLite caching.
             </p>
           </div>
 
           <div className="p-5">
-            <h3 className="text-sm font-semibold text-slate-100">
+            <h3 className="text-sm font-semibold text-[#F6F1E8]">
               03. Breaking-News False-Positive Discount
             </h3>
-            <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-              Organic users regularly share breaking news headlines in simultaneous bursts. When a cluster’s median account age exceeds 150 days with dispersed registration dates and low hashtag-triad coordination, CoordWatch automatically applies a documented <code className="text-slate-200">-38% to -52%</code> discount.
+            <p className="text-xs text-[#B6AC9E] mt-1.5 leading-relaxed">
+              Organic users regularly share breaking news headlines in simultaneous bursts. When a cluster’s median account age exceeds 150 days with dispersed registration dates and low hashtag-triad coordination, CoordWatch automatically applies a documented <code className="text-[#E8DFD2]">-38% to -52%</code> discount.
             </p>
           </div>
         </div>
@@ -235,13 +244,13 @@ I'd really value your feedback if someone on your team has a few minutes to take
       {/* Section 3: Interactive Phase 6 REST API Reference + Phase 10 Valent Projects Outreach */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Interactive Phase 6 REST API Explorer */}
-        <div className="bg-[#0E121B] border border-slate-800/90 rounded-lg overflow-hidden flex flex-col justify-between">
+        <div className="bg-[rgba(16,36,66,0.42)] backdrop-blur-xl border border-white/10 rounded-[26px] overflow-hidden flex flex-col justify-between">
           <div>
-            <div className="px-5 py-3.5 bg-[#0B0E16] border-b border-slate-800/90">
-              <h2 className="text-sm font-semibold text-slate-100 tracking-tight">
+            <div className="px-5 py-3.5 bg-[rgba(8,20,42,0.5)] border-b border-white/10">
+              <h2 className="text-sm font-semibold text-[#F6F1E8] tracking-tight">
                 Interactive REST API Reference (Phase 6 Specification)
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-[#B6AC9E] mt-0.5">
                 Click any endpoint below to query the live server and inspect the JSON response payload.
               </p>
             </div>
@@ -250,49 +259,49 @@ I'd really value your feedback if someone on your team has a few minutes to take
               <button
                 type="button"
                 onClick={() => testEndpoint('/api/health')}
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#090B10] hover:bg-slate-800 text-sky-400 border border-slate-800 rounded transition-colors"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[rgba(7,18,36,0.55)] hover:bg-white/10 text-[#F0B5A2] border border-white/10 rounded transition-colors"
               >
                 GET /health
               </button>
               <button
                 type="button"
                 onClick={() => testEndpoint('/api/topics')}
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#090B10] hover:bg-slate-800 text-sky-400 border border-slate-800 rounded transition-colors"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[rgba(7,18,36,0.55)] hover:bg-white/10 text-[#F0B5A2] border border-white/10 rounded transition-colors"
               >
                 GET /topics
               </button>
               <button
                 type="button"
                 onClick={() => testEndpoint(`/api/topics/${activeTopicId}/summary`)}
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#090B10] hover:bg-slate-800 text-sky-400 border border-slate-800 rounded transition-colors"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[rgba(7,18,36,0.55)] hover:bg-white/10 text-[#F0B5A2] border border-white/10 rounded transition-colors"
               >
                 GET /topics/{activeTopicId}/summary
               </button>
               <button
                 type="button"
                 onClick={() => testEndpoint(`/api/topics/${activeTopicId}/graph`)}
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#090B10] hover:bg-slate-800 text-sky-400 border border-slate-800 rounded transition-colors"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[rgba(7,18,36,0.55)] hover:bg-white/10 text-[#F0B5A2] border border-white/10 rounded transition-colors"
               >
                 GET /topics/{activeTopicId}/graph
               </button>
               <button
                 type="button"
                 onClick={() => testEndpoint(`/api/topics/${activeTopicId}/clusters`)}
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#090B10] hover:bg-slate-800 text-sky-400 border border-slate-800 rounded transition-colors"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[rgba(7,18,36,0.55)] hover:bg-white/10 text-[#F0B5A2] border border-white/10 rounded transition-colors"
               >
                 GET /topics/{activeTopicId}/clusters
               </button>
               <button
                 type="button"
                 onClick={() => testEndpoint(`/api/topics/${activeTopicId}/timeline`)}
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#090B10] hover:bg-slate-800 text-sky-400 border border-slate-800 rounded transition-colors"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[rgba(7,18,36,0.55)] hover:bg-white/10 text-[#F0B5A2] border border-white/10 rounded transition-colors"
               >
                 GET /topics/{activeTopicId}/timeline
               </button>
               <button
                 type="button"
                 onClick={() => testEndpoint('/api/evaluation/latest')}
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#090B10] hover:bg-slate-800 text-sky-400 border border-slate-800 rounded transition-colors"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[rgba(7,18,36,0.55)] hover:bg-white/10 text-[#F0B5A2] border border-white/10 rounded transition-colors"
               >
                 GET /evaluation/latest
               </button>
@@ -300,24 +309,24 @@ I'd really value your feedback if someone on your team has a few minutes to take
           </div>
 
           <div className="px-5 pb-5">
-            <div className="text-[11px] font-mono text-slate-400 mb-1.5">
+            <div className="text-[11px] font-mono text-[#B6AC9E] mb-1.5">
               {testedEndpoint || 'Select an endpoint above to inspect live JSON response'}
             </div>
-            <pre className="p-3 bg-[#090B10] border border-slate-800/90 rounded text-[11px] font-mono text-emerald-300 h-44 overflow-auto">
+            <pre className="p-3 bg-[rgba(7,18,36,0.55)] border border-white/10 rounded text-[11px] font-mono text-[#D5E8DC] h-44 overflow-auto">
               {apiOutput || '{\n  "hint": "Click any endpoint button above to execute a live request."\n}'}
             </pre>
           </div>
         </div>
 
         {/* Phase 10: Valent / Ariadne Inspiration & Outreach Card */}
-        <div className="bg-[#0E121B] border border-slate-800/90 rounded-lg overflow-hidden flex flex-col justify-between">
+        <div className="bg-[rgba(16,36,66,0.42)] backdrop-blur-xl border border-white/10 rounded-[26px] overflow-hidden flex flex-col justify-between">
           <div>
-            <div className="px-5 py-3.5 bg-[#0B0E16] border-b border-slate-800/90 flex items-center justify-between gap-2">
+            <div className="px-5 py-3.5 bg-[rgba(8,20,42,0.5)] border-b border-white/10 flex items-center justify-between gap-2">
               <div>
-                <h2 className="text-sm font-semibold text-slate-100 tracking-tight">
+                <h2 className="text-sm font-semibold text-[#F6F1E8] tracking-tight">
                   Inspiration: Valent’s Ariadne Engine &amp; Outreach Brief
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-[#B6AC9E] mt-0.5">
                   Portfolio summary &amp; engineering outreach template ready to copy.
                 </p>
               </div>
@@ -328,16 +337,16 @@ I'd really value your feedback if someone on your team has a few minutes to take
                   setCopiedOutreach(true);
                   setTimeout(() => setCopiedOutreach(false), 2500);
                 }}
-                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-100 rounded transition-colors shrink-0"
+                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-white/10 hover:bg-white/[0.14] text-[#F6F1E8] rounded transition-colors shrink-0"
               >
                 {copiedOutreach ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-3.5 h-3.5 text-[#C5DCCB]" />
                     Copied
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3.5 h-3.5 text-sky-400" />
+                    <Copy className="w-3.5 h-3.5 text-[#F0B5A2]" />
                     Copy Outreach Note
                   </>
                 )}
@@ -345,10 +354,10 @@ I'd really value your feedback if someone on your team has a few minutes to take
             </div>
 
             <div className="p-5 space-y-3">
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Inspired by <strong className="text-slate-100">Valent’s Ariadne</strong> narrative risk intelligence platform (<a href="https://valent.co.uk" target="_blank" rel="noreferrer" className="text-sky-300 hover:underline">valent.co.uk</a>), CoordWatch demonstrates how multi-signal graph topology separates organic public reaction from synchronized influence operations across the seeding-to-amplification lifecycle.
+              <p className="text-xs text-[#D4CBBE] leading-relaxed">
+                Inspired by <strong className="text-[#F6F1E8]">Valent’s Ariadne</strong> narrative risk intelligence platform (<a href="https://valent.co.uk" target="_blank" rel="noreferrer" className="text-[#F6C7B6] hover:underline">valent.co.uk</a>), CoordWatch demonstrates how multi-signal graph topology separates organic public reaction from synchronized influence operations across the seeding-to-amplification lifecycle.
               </p>
-              <pre className="p-3 bg-[#090B10] border border-slate-800/90 rounded text-[11px] font-mono text-slate-300 whitespace-pre-wrap leading-relaxed">
+              <pre className="p-3 bg-[rgba(7,18,36,0.55)] border border-white/10 rounded text-[11px] font-mono text-[#D4CBBE] whitespace-pre-wrap leading-relaxed">
                 {outreachTemplate}
               </pre>
             </div>

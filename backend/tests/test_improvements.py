@@ -131,7 +131,8 @@ def test_fp_stress_real():
     assert "rawFlaggedWithoutProtection" in res
     assert "flaggedWithProtection" in res
     assert res["organicNewsAccounts"] == 65
-    assert res["rawFlaggedWithoutProtection"] >= res["flaggedWithProtection"]
+    assert res["rawFlaggedWithoutProtection"] >= 50
+    assert res["flaggedWithProtection"] == 0
 
 
 def test_evasion_modes_change_data():
@@ -149,6 +150,118 @@ def test_evasion_modes_change_data():
     base_bot_ts = [p["created_at"] for p in base["posts"] if "bot" in p["did"]]
     delay_bot_ts = [p["created_at"] for p in delay["posts"] if "bot" in p["did"]]
     assert base_bot_ts != delay_bot_ts
+
+
+def _score(dids, signals, posts, cohort, median_age):
+    from backend.app.analysis.scoring import compute_cluster_score_and_reasons
+    return compute_cluster_score_and_reasons(
+        cluster_dids=dids,
+        signal_averages=signals,
+        cohort_48h_count=cohort,
+        median_age_days=median_age,
+        enable_fp_protection=True,
+        cluster_posts=posts,
+    )
+
+
+def test_h1_aged_bbc_burst_is_benign_before_hard_coordination():
+    dids = [f"did:plc:h1_{i}" for i in range(6)]
+    posts = [
+        {
+            "did": did,
+            "text": "Mayor announces fleet expansion https://bbc.co.uk/news/science-environment-6729012",
+            "links": ["https://bbc.co.uk/news/science-environment-6729012"],
+        }
+        for did in dids
+    ]
+    scored = _score(
+        dids,
+        {"text": 0.92, "timing": 0.80, "age": 0.15, "links": 0.70},
+        posts,
+        cohort=1,
+        median_age=400.0,
+    )
+    assert scored["classification"] == "coordinated_benign"
+    assert scored["discount_applied"] == 0.45
+
+
+def test_scheme_less_bbc_link_still_qualifies_as_news():
+    dids = [f"did:plc:bare_{i}" for i in range(6)]
+    posts = [{"did": did, "links": ["bbc.co.uk/news/1?fbclid=z"], "text": "Mayor announces fleet"} for did in dids]
+    scored = _score(
+        dids,
+        {"text": 0.90, "timing": 0.75, "age": 0.10, "links": 0.70},
+        posts,
+        cohort=1,
+        median_age=400.0,
+    )
+    assert scored["classification"] == "coordinated_benign"
+    assert scored["benign_checks"]["authoritative_news_source"] is True
+
+
+def test_aged_non_allowlist_copypasta_stays_inauthentic():
+    dids = [f"did:plc:f7_{i}" for i in range(6)]
+    posts = [
+        {
+            "did": did,
+            "text": "Stop this terrible policy now https://cleanair-truth-london.org/dossier",
+            "links": ["https://cleanair-truth-london.org/dossier"],
+        }
+        for did in dids
+    ]
+    scored = _score(
+        dids,
+        {"text": 0.92, "timing": 0.80, "age": 0.10, "links": 0.80},
+        posts,
+        cohort=0,
+        median_age=400.0,
+    )
+    assert scored["classification"] == "coordinated_inauthentic"
+    assert scored["discount_applied"] == 0.0
+
+
+def test_fresh_bbc_batch_stays_inauthentic():
+    dids = [f"did:plc:fresh_{i}" for i in range(6)]
+    posts = [
+        {"did": did, "links": ["https://bbc.co.uk/news/uk-1"], "text": "Same headline"}
+        for did in dids
+    ]
+    scored = _score(
+        dids,
+        {"text": 0.95, "timing": 0.85, "age": 0.80, "links": 0.75},
+        posts,
+        cohort=6,
+        median_age=1.0,
+    )
+    assert scored["classification"] == "coordinated_inauthentic"
+
+
+def test_youtube_link_does_not_qualify_as_a_news_burst():
+    dids = [f"did:plc:yt_{i}" for i in range(6)]
+    posts = [{"did": did, "links": ["https://youtube.com/watch?v=abc"], "text": "same caption"} for did in dids]
+    scored = _score(
+        dids,
+        {"text": 0.90, "timing": 0.80, "age": 0.10, "links": 0.70},
+        posts,
+        cohort=0,
+        median_age=400.0,
+    )
+    assert scored["classification"] == "coordinated_inauthentic"
+    assert scored["discount_applied"] == 0.0
+
+
+def test_open_hashtag_with_low_text_similarity_stays_benign():
+    dids = [f"did:plc:tag_{i}" for i in range(6)]
+    posts = [{"did": did, "links": [], "text": f"personal note {i} #CleanAirForAll", "hashtags": ["cleanairforall"]} for i, did in enumerate(dids)]
+    scored = _score(
+        dids,
+        {"text": 0.24, "timing": 0.70, "age": 0.40, "links": 0.90},
+        posts,
+        cohort=1,
+        median_age=200.0,
+    )
+    assert scored["classification"] == "coordinated_benign"
+    assert scored["discount_applied"] == 0.35
 
 
 def test_aged_sleeper_accounts_not_discounted_when_copypasta():

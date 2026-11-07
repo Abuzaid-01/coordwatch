@@ -11,6 +11,8 @@ import math
 import random
 from typing import Any, Dict, List, Tuple
 
+from ..textutil import apply_prepare
+
 ORGANIC_TOPIC_TEMPLATES = [
     "Just finished reading an interesting article on {topic} today. Really makes you think about the future.",
     "Can anyone recommend a good starting guide for {topic}? Looking to learn more this weekend.",
@@ -136,6 +138,9 @@ def generate_organic_background(
             "authorHandle": handle,
             "authorCreatedAt": created_iso,
         })
+
+    for post in posts:
+        apply_prepare(post)
 
     return accounts, posts
 

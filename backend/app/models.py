@@ -74,6 +74,9 @@ class Cluster(Base):
     reasons_json = Column(Text, nullable=False, default="[]")
     example_posts_json = Column(Text, nullable=False, default="[]")
     computed_at = Column(String, nullable=False)
+    classification = Column(String, nullable=True)
+    significance_json = Column(Text, nullable=True)
+    benign_checks_json = Column(Text, nullable=True)
 
 
 class ClusterMember(Base):

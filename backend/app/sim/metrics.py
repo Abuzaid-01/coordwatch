@@ -16,29 +16,47 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 def compute_account_metrics(
     detected_dids: Set[str],
     ground_truth_bot_dids: Set[str],
-    organic_count: int,
+    organic_dids: Optional[Set[str]] = None,
+    hard_neg_dids: Optional[Set[str]] = None,
+    organic_count: Optional[int] = None,
 ) -> Dict[str, Any]:
+    """Account metrics with organic false positives separated from hard negatives.
+
+    organic_count is accepted for older callers. When organic_dids is provided
+    it is the denominator. Hard-negative accounts are a separate false-positive
+    count and are not divided into the organic rate.
+    """
+    organic_dids = organic_dids or set()
+    hard_neg_dids = hard_neg_dids or set()
+    if organic_count is None:
+        organic_count = len(organic_dids)
+
     tp = len(detected_dids & ground_truth_bot_dids)
-    fp = len(detected_dids - ground_truth_bot_dids)
+    fp_organic = len(detected_dids & organic_dids)
+    fp_hard_neg = len(detected_dids & hard_neg_dids)
+    # Accounts that are neither planted bots, nor labeled organic, nor hard-negative.
+    other_fp = len(detected_dids - ground_truth_bot_dids - organic_dids - hard_neg_dids)
+    fp = fp_organic + fp_hard_neg + other_fp
     fn = len(ground_truth_bot_dids - detected_dids)
-    tn = max(0, organic_count - fp)
+    tn = max(0, organic_count - fp_organic)
 
     precision = round(tp / max(1, tp + fp), 4)
     recall = round(tp / max(1, tp + fn), 4)
     f1 = round((2 * precision * recall) / max(1e-9, precision + recall), 4)
-
-    # False Positives per 1,000 organic accounts
-    fp_per_1000 = round((fp / max(1, organic_count)) * 1000.0, 2)
+    fp_per_1000_organic = round((fp_organic / max(1, organic_count)) * 1000.0, 2)
 
     return {
         "tp": tp,
         "fp": fp,
+        "fp_organic": fp_organic,
+        "fp_hard_neg": fp_hard_neg,
         "fn": fn,
         "tn": tn,
         "precision": precision,
         "recall": recall,
         "f1": f1,
-        "fp_per_1000": fp_per_1000,
+        "fp_per_1000": fp_per_1000_organic,
+        "fp_per_1000_organic": fp_per_1000_organic,
     }
 
 
@@ -47,7 +65,7 @@ def compute_pr_auc(
     ground_truth_bot_dids: Set[str],
     all_dids: Set[str],
 ) -> float:
-    """Computes Area Under the Precision-Recall Curve by sweeping threshold from 0 to 100."""
+    """Area under the precision-recall curve. Missing accounts score 0."""
     thresholds = list(range(0, 105, 5))
     points: List[Tuple[float, float]] = []
 
@@ -115,7 +133,7 @@ def compute_cluster_purity(
 ) -> float:
     """Cluster purity: average fraction of cluster members matching the dominant label."""
     if not clusters:
-        return 1.0
+        return None
 
     purities = []
     for c in clusters:
@@ -138,10 +156,11 @@ def bootstrap_ci(
 ) -> Tuple[float, float, float]:
     """Computes (mean, ci_lower, ci_upper) via non-parametric bootstrap resampling."""
     if not values:
-        return 0.0, 0.0, 0.0
-    if len(values) == 1:
-        v = round(values[0], 4)
-        return v, v, v
+        return 0.0, None, None
+    # Ten or more independent runs are required before a confidence interval is published.
+    if len(values) < 10:
+        mean_val = round(sum(values) / len(values), 4)
+        return mean_val, None, None
 
     rng = random.Random(seed)
     n = len(values)

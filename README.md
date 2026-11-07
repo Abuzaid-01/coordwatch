@@ -1,6 +1,6 @@
 # CoordWatch: Coordinated Network & Narrative Intelligence on Bluesky
 
-> **One-line pitch:** A production-grade network intelligence system that monitors Bluesky posts on a topic via Jetstream, detects coordinated inauthentic manipulation clusters using multi-signal graph topology, and explains *why* with mathematical evidence, interactive visualization, and adversarial evasion benchmarks.
+> **One-line pitch:** A research prototype that watches public Bluesky posts for a keyword, groups accounts that post like a coordinated network, and shows the evidence. The score is a lead for a person. It is not a production intelligence system.
 
 **Inspired by:** Valent Projects (`valent.co.uk`) and its Ariadne platform — dedicated to separating authentic organic discourse from manufactured narrative amplification, tracking narrative seeding-to-amplification lifecycles, and grounding all intelligence in explainable evidence.
 
@@ -48,7 +48,7 @@ Bluesky Jetstream Firehose (wss://jetstream2.us-east.bsky.network/subscribe)
   ├── Content & Synchronicity anchors (prunes spurious zero-content edges)
   ├── Louvain community detection (NetworkX partition, min cluster size = 3)
   ├── Cluster-wide honest signal averages across all internal edges
-  ├── Phase 5.5 False-Positive Protection (-38% to -52% discount for established accounts)
+  ├── News-burst rule: an aged cohort sharing an allowlisted headline is benign before the hard-coordination check
   └── Forensic dossier generation (plain-English reasons + SHA-256 aliases)
         │
         ▼
@@ -92,64 +92,128 @@ docker compose up --build
 
 ---
 
-## 4. Ground-Truth Benchmark v2 & Evaluation Lab
+## 4. Measured benchmark
 
-The Benchmark v2 evaluation harness measures detection performance across **12 randomized campaign families** (F1–F12), **10 realistic hard negative scenarios** (H1–H10), and pure organic background chatter using a strict Dev / Held-Out Test split and 30+ bootstrap resamplings.
+Dev and test use the same 12 families and all 10 hard negatives. The seeds differ: dev is 42–51, test is 142–151. An account counts as a detection only when it sits in a cluster labeled `coordinated_inauthentic` with score at least 50.
+
+The previous tables in this section reported perfect held-out recall. That split reused easy copy-paste families and the recalls were not measured by this detector. Those figures are withdrawn.
 
 ```bash
-python -m backend.app.sim.run_eval
-# or: npm run eval
-# To regenerate markdown tables directly from latest.json:
-# python scripts/generate_eval_report.py
+PYTHONPATH=. python3 -m backend.app.sim.run_eval
+PYTHONPATH=. python3 scripts/generate_eval_report.py
 ```
 
-### Reproducible Benchmark Results (Benchmark v2)
-> **Generated from:** `backend/data/evaluation_runs/latest.json` · **Status:** Fully reproducible, zero hand-typed scores.
+The block below is the script output from that published run. The runner also prints true positives and false positives. Those two counts are the first dev seed. The means are in the table.
 
-#### 1. Dev Split vs. Held-Out Test Split (95% Bootstrap Confidence Intervals)
-| Metric | Dev Set (F1–F6, H1–H5) | Held-Out Test (F7–F12, H6–H10) | Target / Note |
+### Measured benchmark
+> **Generated from:** `backend/data/evaluation_runs/latest.json` · **Git commit:** `41fad02-dirty` · **Computed:** `2026-11-07 06:10:14 UTC`
+> **Label:** `published` · **Split:** same 12 families and all 10 hard negatives; dev and test differ by seed
+> **Dev seeds:** `[42, 43, 44, 45, 46, 47, 48, 49, 50, 51]` · **Test seeds:** `[142, 143, 144, 145, 146, 147, 148, 149, 150, 151]` · **Organic per seed:** `200` · **Permutations:** `200`
+
+#### Dev seeds and unseen seeds
+| Metric | Dev seeds | Unseen seeds | Note |
 | :--- | :---: | :---: | :--- |
-| **Precision** | 0.522 ± 0.157 [0.316, 0.698] | 1.000 ± 0.000 [1.000, 1.000] | Account-level accuracy |
-| **Recall** | 0.385 ± 0.219 [0.133, 0.667] | 1.000 ± 0.000 [1.000, 1.000] | Bot recovery rate |
-| **F1 Score** | 0.434 ± 0.202 [0.188, 0.682] | 1.000 ± 0.000 [1.000, 1.000] | Balanced harmonic mean |
-| **PR-AUC** | 0.458 ± 0.136 [0.338, 0.648] | 0.740 ± 0.039 [0.694, 0.788] | Threshold-independent area |
-| **Campaign Recall (≥50%)** | 0.389 ± 0.208 [0.167, 0.667] | 1.000 ± 0.000 [1.000, 1.000] | Target network detection |
-| **Cluster Purity** | 1.000 ± 0.000 [1.000, 1.000] | 1.000 ± 0.000 [1.000, 1.000] | Dominant label fraction |
-| **Hard Negative Flag Rate** | 0.600 ± 0.000 [0.600, 0.600] | 0.000 ± 0.000 [0.000, 0.000] | False alarms on innocent groups |
+| **Precision** | 0.920 ± 0.065 [0.874, 0.946] | 0.908 ± 0.064 [0.862, 0.939] | Account-level |
+| **Recall** | 0.534 ± 0.182 [0.410, 0.632] | 0.472 ± 0.152 [0.378, 0.570] | Planted bots flagged |
+| **F1** | 0.660 ± 0.185 [0.526, 0.752] | 0.611 ± 0.143 [0.519, 0.702] | Harmonic mean |
+| **PR-AUC** | 0.689 ± 0.084 [0.636, 0.736] | 0.652 ± 0.084 [0.600, 0.701] | Outside an inauthentic cluster scores 0 |
+| **Campaign recall** | 0.525 ± 0.179 [0.408, 0.617] | 0.467 ± 0.155 [0.375, 0.567] | At least half the members flagged |
+| **Cluster purity** | 1.000 ± 0.000 [1.000, 1.000] | 1.000 ± 0.000 [1.000, 1.000] | n/a when no inauthentic cluster |
+| **Hard-negative flag rate** | 0.100 ± 0.000 [0.100, 0.100] | 0.110 ± 0.030 [0.100, 0.130] | Scenarios with any inauthentic member |
+| **Organic FP per 1,000** | 0.000 ± 0.000 [0.000, 0.000] | 0.000 ± 0.000 [0.000, 0.000] | Hard negatives are not in this rate |
 
-#### 2. Null-Control Verification
-- **Test:** Shuffled-author permutation & pure organic background (no planted bots)
-- **Organic Accounts Tested:** 300
-- **False Clusters Flagged:** 0
-- **Audit Status:** `PASS: Zero false clusters on pure organic chatter`
+#### Null control
+- **Organic accounts:** 120
+- **Inauthentic clusters:** 0
+- **Organic false positives:** 0
+- **Shuffled-author campaign recall:** 0.0
+- **Status:** `PASS`
 
-#### 3. Baselines & Ablation Comparison
-| Model Variant | Precision | Recall | F1 | Notes |
-| :--- | :---: | :---: | :---: | :--- |
-| Baseline: Exact-Duplicate Text Only | 0.000 | 0.000 | 0.000 | Baseline reference |
-| Baseline: Random Guessing Baseline | 0.272 | 0.500 | 0.231 | Baseline reference |
-| Full Multi-Signal Pipeline + Benign Explanations | 0.522 | 0.385 | 0.434 | Pipeline ablation |
-| Without Benign-Explanation Rules (Raw Graph Only) | 0.316 | 0.133 | 0.188 | Pipeline ablation |
+#### Baselines and ablation
+| Variant | Precision | Recall | F1 |
+| :--- | :---: | :---: | :---: |
+| Exact-duplicate text, three accounts inside 6h | 0.404 | 0.832 | 0.544 |
+| Seeded coin-flip at 0.5 | 0.383 | 0.526 | 0.443 |
+| Full pipeline with benign news rule | 0.920 | 0.534 | 0.660 |
+| Same seeds with benign news rule off | 0.823 | 0.543 | 0.642 |
 
-#### 4. Evasion Boundaries ('What Beats This Detector')
-| Evasion Vector | Attack Cost | Intensity | Observed Recall | Assessment |
-| :--- | :---: | :---: | :---: | :--- |
-| LLM Paraphrase + 6h Jitter | High | 90% | 0.38 | Degrades (Reported honestly) |
-| Aged Sleeper Accounts (Copypasta) | Medium | 100% | 0.88 | Detected by copypasta & URL signals |
-| Camouflage Chatter (5:1 organic) | Medium | 80% | 0.62 | Moderate drop |
-| Slow Drip Spread (>12 hours) | Low | 75% | 0.44 | Degrades temporal burst signal |
-| Combined Evasion (Paraphrase+Jitter+Aged) | Very High | 100% | 0.28 | Under research (Major limitation) |
+#### Measured evasion
+| Evasion | Family | Seed | Organic | Permutations | Observed recall |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Paraphrase plus 6h jitter | F3 | 42 | 80 | 50 | 0.000 |
+| Aged sleeper copypasta | F7 | 42 | 80 | 50 | 1.000 |
+| Camouflage chatter | F10 | 42 | 80 | 50 | 1.000 |
+| Slow drip over 12h | F8 | 42 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 42 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 43 | 80 | 50 | 0.000 |
+| Aged sleeper copypasta | F7 | 43 | 80 | 50 | 1.000 |
+| Camouflage chatter | F10 | 43 | 80 | 50 | 1.000 |
+| Slow drip over 12h | F8 | 43 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 43 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 44 | 80 | 50 | 0.000 |
+| Aged sleeper copypasta | F7 | 44 | 80 | 50 | 1.000 |
+| Camouflage chatter | F10 | 44 | 80 | 50 | 1.000 |
+| Slow drip over 12h | F8 | 44 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 44 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 45 | 80 | 50 | 0.000 |
+| Aged sleeper copypasta | F7 | 45 | 80 | 50 | 1.000 |
+| Camouflage chatter | F10 | 45 | 80 | 50 | 1.000 |
+| Slow drip over 12h | F8 | 45 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 45 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 46 | 80 | 50 | 0.000 |
+| Aged sleeper copypasta | F7 | 46 | 80 | 50 | 1.000 |
+| Camouflage chatter | F10 | 46 | 80 | 50 | 1.000 |
+| Slow drip over 12h | F8 | 46 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 46 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 47 | 80 | 50 | 0.000 |
+| Aged sleeper copypasta | F7 | 47 | 80 | 50 | 1.000 |
+| Camouflage chatter | F10 | 47 | 80 | 50 | 1.000 |
+| Slow drip over 12h | F8 | 47 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 47 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 48 | 80 | 50 | 0.000 |
+| Aged sleeper copypasta | F7 | 48 | 80 | 50 | 1.000 |
+| Camouflage chatter | F10 | 48 | 80 | 50 | 1.000 |
+| Slow drip over 12h | F8 | 48 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 48 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 49 | 80 | 50 | 0.000 |
+| Aged sleeper copypasta | F7 | 49 | 80 | 50 | 1.000 |
+| Camouflage chatter | F10 | 49 | 80 | 50 | 1.000 |
+| Slow drip over 12h | F8 | 49 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 49 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 50 | 80 | 50 | 0.000 |
+| Aged sleeper copypasta | F7 | 50 | 80 | 50 | 1.000 |
+| Camouflage chatter | F10 | 50 | 80 | 50 | 1.000 |
+| Slow drip over 12h | F8 | 50 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 50 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 51 | 80 | 50 | 0.000 |
+| Aged sleeper copypasta | F7 | 51 | 80 | 50 | 1.000 |
+| Camouflage chatter | F10 | 51 | 80 | 50 | 1.000 |
+| Slow drip over 12h | F8 | 51 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 51 | 80 | 50 | 0.000 |
+
+#### News-burst stress
+- **Accounts in the burst:** 65
+- **Inauthentic with the news rule off:** 65
+- **Inauthentic with the news rule on:** 0
+
+#### Limitations recorded with this run
+- Character 3-gram similarity misses a rewrite that shares little surface form with the source sentence.
+- Aged accounts that copy an allowlisted headline are classified as news sharing.
+- The ingestor reads the public post firehose in one process and filters keywords locally.
+- Account creation time comes from plc.directory, with getProfile as the fallback. A failed lookup stores no creation time.
+- A confidence interval is published only when at least 10 seeds were run.
+
+The lab button runs a smaller sample (two seeds, at most 80 organic accounts, 50 permutations). It does not replace the published run.
 
 ---
 
-## 5. Honest Limitations & What Beats the Detector
+## 5. Limits of this prototype
 
-In real-world disinformation analysis (inspired by research and methodologies from Valent Projects, `valent.co.uk`), no heuristic detector is infallible. CoordWatch documents its structural failure modes openly:
-
-1. **Synthetic vs. Real-World Diversity:** Benchmark v2 tests 12 bot families with parameter jitter, but real-world state-backed or commercial disinformation campaigns employ diverse human-in-the-loop operators and custom infrastructure that will stress these thresholds.
-2. **Semantic Paraphrasing with LLMs:** High-entropy semantic rewrites (using varied vocabulary and sentence structures with >6h posting jitter) evade surface 3-gram TF-IDF cosine similarity (recall drops to 38%). *Future work:* Dense multilingual sentence embeddings (e.g. `all-MiniLM-L6-v2`) and claim-level stance extraction.
-3. **Purchased Aged Sleeper Accounts:** Older detectors granted blanket discounts to accounts older than 150 days. CoordWatch v2 eliminated this flaw (requiring verified benign evidence like share-button formatting or authoritative domains to discount), achieving 88% recall against sleeper copypasta rings. However, sleeper networks posting unique organic camouflage posts remain difficult to cluster.
-4. **URL Redirect Loops and Disposable Domains:** Canonicalization strips tracking parameters (`utm_*`, `ref`, `fbclid`), but rotating link-shortener redirects still require active asynchronous HTTP resolution.
+1. Character 3-gram similarity misses a rewrite that shares little surface form with the source sentence.
+2. Aged accounts that copy an allowlisted headline are classified as news sharing.
+3. One process reads the public post firehose and filters keywords locally.
+4. A failed plc.directory lookup stores no account creation time.
+5. A confidence interval is published only when at least 10 seeds were run.
 
 ---
 
@@ -165,7 +229,7 @@ In real-world disinformation analysis (inspired by research and methodologies fr
 
 ## 7. Automated Test Suite
 
-CoordWatch includes 24 automated Python unit and integration tests:
+CoordWatch includes a Python unit and integration suite. It does not run the published 10-seed benchmark:
 
 ```bash
 npm test

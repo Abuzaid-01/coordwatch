@@ -46,14 +46,17 @@ export interface ClusterResult {
   rawScore: number; // before false-positive discount
   discountApplied: number; // e.g. 0.35 if organic news-share discount applied
   discountReason: string | null;
-  classification?: 'coordinated_inauthentic' | 'coordinated_benign' | 'organic';
+  classification?: 'coordinated_inauthentic' | 'coordinated_benign' | 'organic' | 'insufficient_evidence' | null;
   benignChecks?: Record<string, boolean>;
   significance?: {
-    p_value: number;
-    fdr_q_value?: number;
+    p_value: number | null;
+    status?: 'tested' | 'not_tested';
+    n_permutations?: number;
+    fdr_q_value?: number | null;
     significant?: boolean;
     fdr_significant?: boolean;
     stat_observed?: number;
+    reason?: string;
   };
   size: number;
   memberDids: string[];
@@ -163,6 +166,10 @@ export interface FalsePositiveStress {
 }
 
 export interface EvaluationReport {
+  status?: string;
+  detail?: string;
+  label?: string;
+  splitDescription?: string;
   computedAt: string;
   totalAccounts?: number;
   organicAccounts?: number;
@@ -230,4 +237,19 @@ export interface ClusterDetail extends ClusterResult {
   topPhrases?: string[];
   topDomains?: string[];
   activitySparkline?: number[];
+}
+
+export function clusterClassLabel(value?: string | null): string {
+  switch (value) {
+    case 'coordinated_inauthentic':
+      return 'Inauthentic';
+    case 'coordinated_benign':
+      return 'Benign';
+    case 'organic':
+      return 'Organic';
+    case 'insufficient_evidence':
+      return 'Insufficient evidence';
+    default:
+      return 'unlabeled';
+  }
 }

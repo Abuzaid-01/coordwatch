@@ -22,41 +22,41 @@ interface PositionedNode extends GraphNode {
 function getClusterPalette(score: number, clusterId: string | null) {
   if (!clusterId) {
     return {
-      fill: '#475569',
-      stroke: '#1E293B',
-      hullFill: 'rgba(30, 41, 59, 0.2)',
-      hullStroke: 'rgba(100, 116, 139, 0.25)',
-      edge: 'rgba(100, 116, 139, 0.22)',
-      text: '#94A3B8',
+      fill: '#7E8DA3',
+      stroke: '#243044',
+      hullFill: 'rgba(126, 141, 163, 0.16)',
+      hullStroke: 'rgba(201, 214, 234, 0.28)',
+      edge: 'rgba(201, 214, 234, 0.22)',
+      text: '#C9D6EA',
     };
   }
   if (score >= 70) {
     return {
-      fill: '#EF4444',
-      stroke: '#FCA5A5',
-      hullFill: 'rgba(239, 68, 68, 0.09)',
-      hullStroke: 'rgba(239, 68, 68, 0.58)',
-      edge: 'rgba(239, 68, 68, 0.38)',
-      text: '#FCA5A5',
+      fill: '#E07A62',
+      stroke: '#F6C7B6',
+      hullFill: 'rgba(224, 122, 98, 0.12)',
+      hullStroke: 'rgba(224, 122, 98, 0.62)',
+      edge: 'rgba(224, 122, 98, 0.42)',
+      text: '#F6C7B6',
     };
   }
   if (score >= 50) {
     return {
-      fill: '#F97316',
-      stroke: '#FDBA74',
-      hullFill: 'rgba(249, 115, 22, 0.09)',
-      hullStroke: 'rgba(249, 115, 22, 0.52)',
-      edge: 'rgba(249, 115, 22, 0.35)',
-      text: '#FDBA74',
+      fill: '#E8B86D',
+      stroke: '#F3E0C4',
+      hullFill: 'rgba(232, 184, 109, 0.12)',
+      hullStroke: 'rgba(232, 184, 109, 0.55)',
+      edge: 'rgba(232, 184, 109, 0.4)',
+      text: '#F3E0C4',
     };
   }
   return {
-    fill: '#EAB308',
-    stroke: '#FDE047',
-    hullFill: 'rgba(234, 179, 8, 0.08)',
-    hullStroke: 'rgba(234, 179, 8, 0.48)',
-    edge: 'rgba(234, 179, 8, 0.32)',
-    text: '#FDE047',
+    fill: '#E8D7B0',
+    stroke: '#F6F1E8',
+    hullFill: 'rgba(232, 215, 176, 0.1)',
+    hullStroke: 'rgba(232, 215, 176, 0.48)',
+    edge: 'rgba(232, 215, 176, 0.34)',
+    text: '#F6F1E8',
   };
 }
 
@@ -76,7 +76,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
   const [graphMode, setGraphMode] = useState<'force2d' | 'orbital'>('orbital');
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
     width: 780,
-    height: 410,
+    height: 520,
   });
   const [zoom, setZoom] = useState<number>(1);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -93,7 +93,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
     const updateDims = () => {
       const rect = el.getBoundingClientRect();
       if (rect.width > 100) {
-        setDimensions({ width: Math.floor(rect.width), height: 410 });
+        setDimensions({ width: Math.floor(rect.width), height: 520 });
       }
     };
     updateDims();
@@ -112,7 +112,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
   // Deterministic initial coordinates for both ForceGraph2D and Orbital view
   const layout = useMemo(() => {
     const width = dimensions.width || 780;
-    const height = dimensions.height || 410;
+    const height = dimensions.height || 520;
     const cx = width / 2;
     const cy = height / 2 + 8;
 
@@ -267,7 +267,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
       if (!dimmed && node.clusterId && (isHovered || node.isSeedLabel)) {
         ctx.beginPath();
         ctx.arc(nx, ny, r + 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = pal.hullFill.replace('0.09', '0.28');
+        ctx.fillStyle = pal.hullFill.replace(/0\.\d+/, '0.28');
         ctx.fill();
       }
 
@@ -278,10 +278,10 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
 
       ctx.lineWidth = (isHovered ? 2 : 1.1) / Math.max(0.7, globalScale * 0.8);
       ctx.strokeStyle = isHovered
-        ? '#F8FAFC'
+        ? '#F6F1E8'
         : dimmed
           ? 'rgba(15, 23, 42, 0.4)'
-          : '#090B10';
+          : '#1A120E';
       ctx.stroke();
 
       // Draw non-overlapping label on hover or for the 2 seed nodes of the selected cluster
@@ -301,9 +301,9 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
         const lx = nx + r + 4;
         const ly = ny - fontSize / 2;
 
-        ctx.fillStyle = 'rgba(9, 11, 16, 0.90)';
+        ctx.fillStyle = 'rgba(8, 18, 36, 0.88)';
         ctx.fillRect(lx - 2.5, ly - 1.5, tw + 5, fontSize + 3);
-        ctx.fillStyle = isHovered ? '#38BDF8' : pal.text;
+        ctx.fillStyle = isHovered ? '#F6F1E8' : pal.text;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillText(label, lx, ly);
@@ -331,12 +331,17 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
     ctx.save();
     ctx.scale(dpr, dpr);
 
-    ctx.fillStyle = '#090B10';
+    ctx.fillStyle = '#071422';
+    ctx.fillRect(0, 0, displayW, displayH);
+    const wash = ctx.createRadialGradient(displayW * 0.42, displayH * 0.48, 30, displayW * 0.42, displayH * 0.48, 320);
+    wash.addColorStop(0, 'rgba(224, 122, 98, 0.18)');
+    wash.addColorStop(1, 'rgba(224, 122, 98, 0)');
+    ctx.fillStyle = wash;
     ctx.fillRect(0, 0, displayW, displayH);
 
     const cx = displayW / 2;
     const cy = displayH / 2 + 8;
-    ctx.strokeStyle = 'rgba(30, 41, 59, 0.38)';
+    ctx.strokeStyle = 'rgba(246, 241, 232, 0.08)';
     ctx.lineWidth = 1;
     for (const r of [110, 220, 320]) {
       ctx.beginPath();
@@ -354,12 +359,12 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
 
       ctx.beginPath();
       ctx.arc(meta.cx, meta.cy, meta.hullRadius, 0, Math.PI * 2);
-      ctx.fillStyle = isSelected ? pal.hullFill.replace('0.09', '0.16') : pal.hullFill;
+      ctx.fillStyle = isSelected ? pal.hullFill.replace(/0\.\d+/, '0.2') : pal.hullFill;
       ctx.fill();
 
       ctx.lineWidth = isSelected ? 1.75 : 1;
       ctx.setLineDash(isSelected ? [] : [5, 4]);
-      ctx.strokeStyle = isSelected ? pal.hullStroke : 'rgba(71, 85, 105, 0.4)';
+      ctx.strokeStyle = isSelected ? pal.hullStroke : 'rgba(246, 241, 232, 0.16)';
       ctx.stroke();
       ctx.setLineDash([]);
 
@@ -371,15 +376,15 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
       const bw = textWidth + 16;
       const bh = 18;
 
-      ctx.fillStyle = isSelected ? '#1E293B' : 'rgba(15, 23, 42, 0.92)';
-      ctx.strokeStyle = isSelected ? pal.stroke : 'rgba(51, 65, 85, 0.8)';
+      ctx.fillStyle = isSelected ? 'rgba(224, 122, 98, 0.22)' : 'rgba(8, 18, 36, 0.88)';
+      ctx.strokeStyle = isSelected ? pal.stroke : 'rgba(246, 241, 232, 0.16)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.roundRect(bx, by, bw, bh, 4);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = isSelected ? '#F8FAFC' : pal.text;
+      ctx.fillStyle = isSelected ? '#F6F1E8' : pal.text;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(badgeText, meta.cx, by + bh / 2);
@@ -410,7 +415,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
 
       if (isEgoLink) {
         ctx.lineWidth = 1.8;
-        ctx.strokeStyle = '#38BDF8';
+        ctx.strokeStyle = '#F6F1E8';
       } else if (!inSelectedCluster) {
         ctx.lineWidth = 0.6;
         ctx.strokeStyle = 'rgba(51, 65, 85, 0.12)';
@@ -491,14 +496,14 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
   };
 
   return (
-    <div className="flex flex-col bg-[#0E121B] border border-slate-800/90 rounded-lg overflow-hidden">
+    <div className="flex flex-col bg-[rgba(16,36,66,0.42)] backdrop-blur-xl border border-white/10 rounded-[26px] overflow-hidden">
       {/* Graph Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-slate-800/90 bg-[#0B0E16]">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-white/10 bg-[rgba(8,20,42,0.5)]">
         <div>
-          <h2 className="text-sm font-semibold text-slate-100 tracking-tight">
-            2D Force-Directed Similarity Graph &amp; Louvain Communities
+          <h2 className="text-sm font-semibold text-[#F6F1E8] tracking-tight">
+            Similarity graph
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5 font-mono tabular-nums">
+          <p className="text-xs text-[#B6AC9E] mt-0.5 font-mono tabular-nums">
             {graph.nodes.length} actor nodes · {filteredLinks.length} weighted similarity edges ·{' '}
             {layout.clusterMeta.size} Louvain communities
           </p>
@@ -509,15 +514,15 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
           <div
             role="group"
             aria-label="Graph layout engine"
-            className="flex items-center gap-0.5 p-0.5 bg-[#090B10] border border-slate-800 rounded"
+            className="flex items-center gap-0.5 p-0.5 bg-[rgba(7,18,36,0.55)] border border-white/10 rounded"
           >
             <button
               type="button"
               onClick={() => setGraphMode('force2d')}
               className={`flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-sm transition-colors whitespace-nowrap shrink-0 ${
                 graphMode === 'force2d'
-                  ? 'bg-sky-600 text-white font-semibold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-[#E07A62] text-[#FFF8F3] font-semibold'
+                  : 'text-[#B6AC9E] hover:text-[#F6F1E8]'
               }`}
             >
               <Sparkles className="w-3 h-3" />
@@ -528,8 +533,8 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
               onClick={() => setGraphMode('orbital')}
               className={`flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-sm transition-colors whitespace-nowrap shrink-0 ${
                 graphMode === 'orbital'
-                  ? 'bg-sky-600 text-white font-semibold'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-[#E07A62] text-[#FFF8F3] font-semibold'
+                  : 'text-[#B6AC9E] hover:text-[#F6F1E8]'
               }`}
             >
               <Compass className="w-3 h-3" />
@@ -541,7 +546,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
           <div
             role="group"
             aria-label="Filter graph edges by signal type"
-            className="flex items-center gap-0.5 p-0.5 bg-[#090B10] border border-slate-800 rounded"
+            className="flex items-center gap-0.5 p-0.5 bg-[rgba(7,18,36,0.55)] border border-white/10 rounded"
           >
             {(
               [
@@ -558,8 +563,8 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
                 onClick={() => setSignalFilter(tab.id)}
                 className={`px-2 py-1 text-xs font-medium rounded-sm transition-colors whitespace-nowrap shrink-0 ${
                   signalFilter === tab.id
-                    ? 'bg-slate-800 text-slate-100'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-white/10 text-[#F6F1E8]'
+                    : 'text-[#B6AC9E] hover:text-[#F6F1E8]'
                 }`}
               >
                 {tab.label}
@@ -572,7 +577,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
               type="button"
               aria-label="Zoom in network graph"
               onClick={handleZoomIn}
-              className="p-1.5 text-slate-400 hover:text-slate-100 bg-[#090B10] border border-slate-800 rounded transition-colors"
+              className="p-1.5 text-[#B6AC9E] hover:text-[#F6F1E8] bg-[rgba(7,18,36,0.55)] border border-white/10 rounded transition-colors"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
@@ -580,7 +585,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
               type="button"
               aria-label="Zoom out network graph"
               onClick={handleZoomOut}
-              className="p-1.5 text-slate-400 hover:text-slate-100 bg-[#090B10] border border-slate-800 rounded transition-colors"
+              className="p-1.5 text-[#B6AC9E] hover:text-[#F6F1E8] bg-[rgba(7,18,36,0.55)] border border-white/10 rounded transition-colors"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
@@ -588,7 +593,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
               type="button"
               aria-label="Reset network graph view"
               onClick={handleResetView}
-              className="p-1.5 text-slate-400 hover:text-slate-100 bg-[#090B10] border border-slate-800 rounded transition-colors"
+              className="p-1.5 text-[#B6AC9E] hover:text-[#F6F1E8] bg-[rgba(7,18,36,0.55)] border border-white/10 rounded transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
@@ -602,7 +607,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
         data-testid="network-graph-canvas"
         data-nodes-count={graph.nodes.length}
         data-links-count={filteredLinks.length}
-        className="relative w-full h-[410px] bg-[#090B10] select-none overflow-hidden"
+        className="relative w-full h-[520px] bg-[#071422] select-none overflow-hidden"
       >
         {graphMode === 'force2d' ? (
           <ForceGraph2D
@@ -610,7 +615,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
             width={dimensions.width}
             height={dimensions.height}
             graphData={forceGraphData}
-            backgroundColor="#090B10"
+            backgroundColor="#071422"
             cooldownTicks={40}
             onEngineStop={() => {
               fgRef.current?.pauseAnimation();
@@ -647,7 +652,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
                 activeEgoNode &&
                 (sNode?.id === activeEgoNode.id || tNode?.id === activeEgoNode.id)
               ) {
-                return '#38BDF8';
+                return '#F6F1E8';
               }
               const cid = sNode?.clusterId || tNode?.clusterId || null;
               if (selectedClusterId && cid !== selectedClusterId) {
@@ -713,10 +718,10 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
               const isSel = selectedClusterId === cid;
               const dotColor =
                 meta.maxScore >= 70
-                  ? 'bg-red-500'
+                  ? 'bg-[#E07A62]'
                   : meta.maxScore >= 50
-                    ? 'bg-orange-500'
-                    : 'bg-yellow-400';
+                    ? 'bg-[#E8B86D]'
+                    : 'bg-[#E8D7B0]';
               return (
                 <button
                   key={cid}
@@ -724,8 +729,8 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
                   onClick={() => onSelectCluster(cid)}
                   className={`flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono rounded border transition-colors ${
                     isSel
-                      ? 'bg-slate-800/95 text-white border-sky-500 font-semibold'
-                      : 'bg-[#090B10]/90 text-slate-300 border-slate-800 hover:border-slate-600'
+                      ? 'bg-[rgba(246,241,232,0.12)] text-[#FFF8F3] border-[#E07A62] font-semibold'
+                      : 'bg-[rgba(7,18,36,0.72)] text-[#D4CBBE] border-white/10 hover:border-white/30'
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full ${dotColor}`} />
@@ -738,29 +743,29 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
       </div>
 
       {/* Integrated Bottom Telemetry & Legend Strip inside Graph Card */}
-      <div className="px-4 py-2.5 bg-[#0B0E16] border-t border-slate-800/90 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex flex-wrap items-center gap-4 text-slate-300">
+      <div className="px-4 py-2.5 bg-[rgba(8,20,42,0.5)] border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-4 text-[#D4CBBE]">
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-[#E07A62] inline-block" />
             Coordinated Ring (70–100)
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-orange-500 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-[#E8B86D] inline-block" />
             Elevated (50–69)
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-[#E8D7B0] inline-block" />
             FP Discounted News Burst (&lt;50)
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-slate-500 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-[#8FA0B8] inline-block" />
             Independent Organic Account
           </span>
         </div>
 
-        <div className="font-mono text-slate-400 tabular-nums">
+        <div className="font-mono text-[#B6AC9E] tabular-nums">
           {activeEgoNode ? (
-            <span className="text-sky-300">
+            <span className="text-[#F6C7B6]">
               Node {revealHandles ? (activeEgoNode.handle || activeEgoNode.id) : (activeEgoNode.alias || activeEgoNode.label || `A-${activeEgoNode.id.slice(-6).toUpperCase()}`)} ·{' '}
               {activeEgoNode.clusterId || (activeEgoNode.cluster && activeEgoNode.cluster !== 'unassigned' ? activeEgoNode.cluster : null) || 'Organic'} · Score {activeEgoNode.score}/100 ·{' '}
               {Math.max(0, egoNeighbors.size - 1)} connected peers

@@ -13,6 +13,7 @@ authoritative domain, or open community hashtag).
 
 from typing import Any, Dict, List, Optional
 from ..config import settings
+from ..textutil import AUTHORITATIVE_DOMAINS, host_in_set, host_of
 
 
 def compute_cluster_score_and_reasons(
@@ -56,62 +57,62 @@ def compute_cluster_score_and_reasons(
     cohort_ratio = cohort_48h_count / max(1, len(cluster_dids))
     is_aged_cohort = median_age_days > 120 and cohort_ratio < 0.35
 
-    # Check for authoritative domain presence
-    all_domains = set()
-    all_texts = []
+    matched_domains = set()
     if cluster_posts:
         for p in cluster_posts:
-            all_texts.append(p.get("text", ""))
             for lk in p.get("links") or []:
-                domain = lk.lower().split("://")[-1].split("/")[0].replace("www.", "")
-                if domain:
-                    all_domains.add(domain)
+                if host_in_set(lk, AUTHORITATIVE_DOMAINS):
+                    host = host_of(lk)
+                    for domain in AUTHORITATIVE_DOMAINS:
+                        if host == domain or host.endswith("." + domain):
+                            matched_domains.add(domain)
+                            break
 
-    authoritative_domains = {
-        "bbc.co.uk", "bbc.com", "tfl.gov.uk", "theguardian.com", "reuters.com",
-        "gov.uk", "wikipedia.org", "nytimes.com", "ft.com", "nature.com"
-    }
-    has_authoritative_link = bool(all_domains & authoritative_domains)
+    has_authoritative_link = bool(matched_domains)
 
-    # Check 1: Share-button match (e.g. breaking news headline sharing)
-    # Breaking news bursts typically have shared links, moderate text overlap, and dispersed account ages
-    if is_aged_cohort and (has_authoritative_link or (not cluster_posts and l_sig >= 0.45 and t_sig <= 0.40)):
-        benign_checks["authoritative_news_source"] = True
-        benign_checks["share_button_match"] = True
-
-    # Check 2: Open community hashtag (high hashtag overlap, but low text copypasta)
-    if l_sig >= 0.30 and t_sig < 0.25:
-        benign_checks["open_community_hashtag"] = True
-
-    # Check 3: Live event reaction (burst timing, but distinct personal wording)
-    if s_sig >= 0.35 and t_sig < 0.20 and l_sig < 0.20:
-        benign_checks["diverse_lexical_chatter"] = True
-
-    # Check 4: Share button headline template match
-    if is_aged_cohort and has_authoritative_link and (0.30 <= t_sig <= 0.65):
-        benign_checks["share_button_match"] = True
+    # Identical headlines are the common benign case. Decide that before the
+    # hard-coordination short circuit, which used to swallow every share-button burst.
+    # Limit: an aged network that copies an allowlisted headline is classified as news sharing.
+    news_burst = bool(
+        enable_fp_protection
+        and has_authoritative_link
+        and is_aged_cohort
+        and t_sig >= 0.30
+    )
 
     discount = 0.0
     discount_reason = None
     classification = "coordinated_inauthentic"
-
-    # D1: Hard coordination is characterized by synchronized copypasta text
     is_hard_coordinated = (t_sig >= 0.48 and s_sig >= 0.40) or (t_sig >= 0.65)
 
-    if is_hard_coordinated:
-        # High confidence coordination regardless of account age!
+    if news_burst:
+        benign_checks["authoritative_news_source"] = True
+        benign_checks["share_button_match"] = True
+        discount = 0.45
+        classification = "coordinated_benign"
+        shown = ", ".join(sorted(matched_domains)[:2]) or "press"
+        discount_reason = (
+            f"Benign News-Burst Discount (-45%): Verified authoritative domain ({shown}) "
+            f"shared by established accounts whose creation dates are spread out."
+        )
+    elif is_hard_coordinated:
         discount = 0.0
         classification = "coordinated_inauthentic"
-        if is_aged_cohort:
-            discount_reason = None
     elif enable_fp_protection:
+        if is_aged_cohort and (has_authoritative_link or (not cluster_posts and l_sig >= 0.45 and t_sig <= 0.40)):
+            benign_checks["authoritative_news_source"] = True
+            benign_checks["share_button_match"] = True
+        if l_sig >= 0.30 and t_sig < 0.25:
+            benign_checks["open_community_hashtag"] = True
+        if s_sig >= 0.35 and t_sig < 0.20 and l_sig < 0.20:
+            benign_checks["diverse_lexical_chatter"] = True
         if benign_checks["share_button_match"] or benign_checks["authoritative_news_source"]:
             discount = 0.45
             classification = "coordinated_benign"
+            shown = ", ".join(sorted(matched_domains)[:2]) or "press"
             discount_reason = (
-                f"Benign News-Burst Discount (-45%): Verified authoritative domain "
-                f"({', '.join(list(all_domains & authoritative_domains)[:2]) or 'press'}) "
-                f"shared by established accounts with diverse creation history."
+                f"Benign News-Burst Discount (-45%): Verified authoritative domain ({shown}) "
+                f"shared by established accounts whose creation dates are spread out."
             )
         elif benign_checks["open_community_hashtag"]:
             discount = 0.35

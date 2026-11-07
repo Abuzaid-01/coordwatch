@@ -18,6 +18,8 @@ from datetime import datetime, timezone
 import random
 from typing import Any, Dict, List, Tuple
 
+from ..textutil import apply_prepare
+
 
 def generate_hard_negative(
     scenario_id: str,
@@ -302,6 +304,9 @@ def generate_hard_negative(
 
     else:
         target_class = "organic"
+
+    for post in posts:
+        apply_prepare(post)
 
     return {
         "id": scenario_id,

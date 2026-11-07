@@ -4,68 +4,19 @@ Phase 4.4: Shared Links & Hashtags Signal in Python with Rarity Weighting and In
 
 import math
 from typing import Any, Dict, List, Set, Tuple
-import urllib.parse
 
-# C2: Allowlist of high-traffic organic news/official domains that count for little
-POPULAR_DOMAINS_ALLOWLIST = {
-    "bbc.co.uk",
-    "bbc.com",
-    "tfl.gov.uk",
-    "theguardian.com",
-    "reuters.com",
-    "gov.uk",
-    "wikipedia.org",
-    "youtube.com",
-    "youtu.be",
-    "nytimes.com",
-    "ft.com",
-    "sky.com",
-    "bsky.app",
-    "x.com",
-    "twitter.com",
-}
+from ..textutil import POPULAR_DOMAINS, canonicalize_url, host_in_set, host_of
 
-TRACKING_PARAMS = {
-    "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
-    "ref", "ref_src", "source", "fbclid", "gclid", "t", "s", "si", "feature",
-}
+# Re-exported so existing imports keep working. The list itself lives in textutil.
+POPULAR_DOMAINS_ALLOWLIST = POPULAR_DOMAINS
 
 
 def _pair_key(did1: str, did2: str) -> Tuple[str, str]:
     return (did1, did2) if did1 < did2 else (did2, did1)
 
 
-def canonicalize_url(url: str) -> str:
-    """H10: Canonicalize URL by stripping tracking parameters, normalizing host, scheme, and path."""
-    if not url:
-        return ""
-    try:
-        parsed = urllib.parse.urlparse(url.strip())
-        scheme = (parsed.scheme or "http").lower()
-        netloc = parsed.netloc.lower()
-        if netloc.startswith("www."):
-            netloc = netloc[4:]
-        if ":" in netloc:
-            host, port = netloc.split(":", 1)
-            if (scheme == "http" and port == "80") or (scheme == "https" and port == "443"):
-                netloc = host
-        path = parsed.path.rstrip("/") or "/"
-
-        query_pairs = urllib.parse.parse_qsl(parsed.query, keep_blank_values=False)
-        clean_pairs = [(k, v) for k, v in query_pairs if k.lower() not in TRACKING_PARAMS]
-        clean_pairs.sort()
-        clean_query = urllib.parse.urlencode(clean_pairs)
-
-        return urllib.parse.urlunparse((scheme, netloc, path, "", clean_query, ""))
-    except Exception:
-        return url.strip().lower()
-
-
 def _get_domain(url: str) -> str:
-    cleaned = url.lower().split("://")[-1].split("/")[0]
-    if cleaned.startswith("www."):
-        cleaned = cleaned[4:]
-    return cleaned
+    return host_of(url)
 
 
 def compute_shared_links_signal(posts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -136,7 +87,7 @@ def compute_shared_links_signal(posts: List[Dict[str, Any]]) -> List[Dict[str, A
                 sharing_count = len(dids_by_link.get(lk, set()))
                 # Rarity weight formula: 1 / log2(2 + count)
                 r_factor = 1.0 / math.log2(2.0 + sharing_count)
-                if domain in POPULAR_DOMAINS_ALLOWLIST:
+                if host_in_set(lk, POPULAR_DOMAINS_ALLOWLIST):
                     r_factor *= 0.35  # High-traffic domain discount
                 rarity_multiplier = max(0.15, min(1.0, rarity_multiplier * (1.2 * r_factor)))
 

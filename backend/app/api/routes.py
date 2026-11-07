@@ -24,7 +24,7 @@ from ..db import (
     get_topics_list,
 )
 from ..ingest.jetstream import get_ingest_telemetry, set_jsonl_recording, topic_registry
-from ..sim.simulator import run_full_evaluation_suite
+from ..sim.benchmark_v2 import run_benchmark_v2_suite
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -200,26 +200,25 @@ def get_evaluation_latest() -> Dict[str, Any]:
     finally:
         conn.close()
 
-    # If no cached evaluation exists yet, execute benchmark and persist
-    res = run_full_evaluation_suite(500, seed=42)
-    conn = get_connection()
-    try:
-        now = datetime.now(timezone.utc).isoformat()
-        conn.execute(
-            "INSERT INTO evaluation_runs (report_json, computed_at) VALUES (?, ?)",
-            (json.dumps(res), now),
-        )
-        conn.commit()
-    finally:
-        conn.close()
-    return res
+    return {
+        "status": "not_run",
+        "detail": "No benchmark is stored. Use the lab button or python -m backend.app.sim.run_eval.",
+    }
 
 
 @router.post("/evaluation/run")
 def run_evaluation(payload: EvalRunPayload) -> Dict[str, Any]:
-    count = min(1000, max(100, payload.organicCount or 500))
+    count = min(80, max(40, payload.organicCount or 80))
     seed = payload.seed if payload.seed is not None else 42
-    res = run_full_evaluation_suite(count, seed=seed)
+    # Lab sample: two seeds. The 10-seed published run stays on the command line.
+    res = run_benchmark_v2_suite(
+        seeds=[seed, seed + 1],
+        test_seeds=[seed + 100, seed + 101],
+        organic_count=count,
+        n_permutations=50,
+        evasion_seeds=[seed],
+        label="lab sample",
+    )
 
     conn = get_connection()
     try:

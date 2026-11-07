@@ -21,6 +21,8 @@ import math
 import random
 from typing import Any, Dict, List, Optional, Tuple
 
+from ..textutil import apply_prepare
+
 SYNONYM_MAP = {
     "stop": ["halt", "end", "block", "cancel", "oppose", "terminate"],
     "terrible": ["disastrous", "destructive", "harmful", "corrupt", "unjust", "awful"],
@@ -58,6 +60,10 @@ def generate_bot_family(
     seed: int,
     target_url: str = "https://cleanair-truth-london.org/dossier",
     campaign_hashtag: str = "AxeTheTaxLondon",
+    burst_span_override: Optional[float] = None,
+    age_days_override: Optional[float] = None,
+    age_spread_override: Optional[float] = None,
+    force_paraphrase: bool = False,
 ) -> Dict[str, Any]:
     """
     Generates accounts and posts for one of the 12 randomized campaign families.
@@ -81,6 +87,11 @@ def generate_bot_family(
         base_age_days = rng.uniform(5.0, 14.0)
         age_spread_hours = rng.uniform(2.0, 40.0)
 
+    if age_days_override is not None:
+        base_age_days = age_days_override
+    if age_spread_override is not None:
+        age_spread_hours = age_spread_override
+
     # 2. Timing parameters
     if family_id == "F8":  # Slow drip
         burst_span_sec = rng.uniform(7200.0, 86400.0)  # 2 to 24 hours
@@ -88,6 +99,8 @@ def generate_bot_family(
         burst_span_sec = rng.uniform(20.0, 180.0)  # very tight (20s - 3m)
     else:
         burst_span_sec = rng.uniform(60.0, 600.0)  # standard burst (1m - 10m)
+    if burst_span_override is not None:
+        burst_span_sec = burst_span_override
 
     # Base seed narrative text
     base_narratives = [
@@ -190,6 +203,9 @@ def generate_bot_family(
         else:
             post_text = f"{core_text} {target_url} #{campaign_hashtag}"
 
+        if force_paraphrase:
+            post_text = _per_bot_paraphrase(post_text, rng)
+
         posts.append({
             "id": f"bot-post-{campaign_id}-{i:03d}",
             "did": did,
@@ -204,6 +220,9 @@ def generate_bot_family(
             "authorHandle": handle,
             "authorCreatedAt": acct_created_iso,
         })
+
+    for post in posts:
+        apply_prepare(post)
 
     return {
         "id": campaign_id,

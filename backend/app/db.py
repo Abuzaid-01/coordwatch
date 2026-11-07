@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import text
 from .config import settings
+from .textutil import apply_prepare, generate_hash_alias
 from .models import (
     Account,
     Base,
@@ -35,10 +36,30 @@ def get_connection() -> sqlite3.Connection:
     return conn
 
 
+def migrate_schema(conn: sqlite3.Connection) -> None:
+    """Add columns create_all will not add to a database that already exists."""
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(clusters)").fetchall()}
+    additions = {
+        "classification": "ALTER TABLE clusters ADD COLUMN classification TEXT",
+        "significance_json": "ALTER TABLE clusters ADD COLUMN significance_json TEXT",
+        "benign_checks_json": "ALTER TABLE clusters ADD COLUMN benign_checks_json TEXT",
+    }
+    for column, statement in additions.items():
+        if column not in existing:
+            conn.execute(statement)
+    conn.commit()
+
+
 def init_db() -> None:
     """Initializes tables and seeds initial demonstration dataset if empty."""
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
+    logger.info("CoordWatch database: %s", settings.database_path)
+    conn = get_connection()
+    try:
+        migrate_schema(conn)
+    finally:
+        conn.close()
     _ensure_seed_dataset()
 
 
@@ -65,7 +86,7 @@ def get_topics_list() -> List[Dict[str, Any]]:
         LEFT JOIN (
             SELECT topic_id,
                    COUNT(*) AS cluster_count,
-                   SUM(CASE WHEN score >= 50 THEN 1 ELSE 0 END) AS high_risk_count
+                   SUM(CASE WHEN score >= 50 AND classification = 'coordinated_inauthentic' THEN 1 ELSE 0 END) AS high_risk_count
             FROM clusters
             GROUP BY topic_id
         ) c ON c.topic_id = t.id
@@ -144,17 +165,22 @@ def get_topic_posts_and_accounts(topic_id: int) -> Tuple[List[Dict[str, Any]], L
                 tags = json.loads(r["hashtags"])
             except Exception:
                 tags = []
+            prepared = apply_prepare({
+                "text": r["text"],
+                "links": links,
+                "hashtags": tags,
+            })
             posts.append({
                 "id": r["id"],
                 "did": r["did"],
                 "text": r["text"],
-                "text_norm": r["text_norm"],
+                "text_norm": prepared["text_norm"],
                 "created_at": r["created_at"],
                 "topic_id": r["topic_id"],
-                "links": links,
-                "hashtags": tags,
+                "links": prepared["links"],
+                "hashtags": prepared["hashtags"],
                 "source": r["source"] if "source" in r.keys() else "live",
-                "author_alias": r["author_alias"] or f"A-{r['did'][-6:].upper()}",
+                "author_alias": r["author_alias"] or generate_hash_alias(r["did"]),
                 "author_handle": r["author_handle"] or f"{r['did'][-8:]}.bsky.social",
                 "author_created_at": r["author_created_at"],
             })
@@ -209,8 +235,9 @@ def analyze_and_persist_topic(topic_id: int) -> Dict[str, Any]:
                 """
                 INSERT OR REPLACE INTO clusters (
                     id, topic_id, score, raw_score, discount_applied, discount_reason,
-                    size, signals_json, reasons_json, example_posts_json, computed_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    size, signals_json, reasons_json, example_posts_json, computed_at,
+                    classification, significance_json, benign_checks_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     c["id"],
@@ -224,6 +251,9 @@ def analyze_and_persist_topic(topic_id: int) -> Dict[str, Any]:
                     json.dumps(c["reasons"]),
                     json.dumps(c["examplePosts"]),
                     now,
+                    c.get("classification") or "insufficient_evidence",
+                    json.dumps(c.get("significance") or {}),
+                    json.dumps(c.get("benignChecks") or {}),
                 ),
             )
             for m in c["members"]:
@@ -303,6 +333,19 @@ def get_stored_clusters(topic_id: int) -> List[Dict[str, Any]]:
         clusters = []
         for r in rows:
             members = members_by_cluster.get(r["id"], [])
+            keys = r.keys()
+            significance = {}
+            benign_checks = {}
+            if "significance_json" in keys and r["significance_json"]:
+                try:
+                    significance = json.loads(r["significance_json"])
+                except Exception:
+                    significance = {}
+            if "benign_checks_json" in keys and r["benign_checks_json"]:
+                try:
+                    benign_checks = json.loads(r["benign_checks_json"])
+                except Exception:
+                    benign_checks = {}
             clusters.append({
                 "id": r["id"],
                 "topicId": r["topic_id"],
@@ -310,6 +353,9 @@ def get_stored_clusters(topic_id: int) -> List[Dict[str, Any]]:
                 "rawScore": r["raw_score"],
                 "discountApplied": r["discount_applied"],
                 "discountReason": r["discount_reason"],
+                "classification": r["classification"] if "classification" in keys else None,
+                "significance": significance,
+                "benignChecks": benign_checks,
                 "size": r["size"],
                 "memberDids": [m["did"] for m in members],
                 "members": members,
@@ -441,7 +487,7 @@ def upsert_account(acc: Dict[str, Any], conn: Optional[sqlite3.Connection] = Non
             (
                 acc["did"],
                 acc.get("handle") or f"{acc['did'][-8:]}.bsky.social",
-                acc.get("alias") or f"A-{acc['did'][-6:].upper()}",
+                acc.get("alias") or generate_hash_alias(acc["did"]),
                 acc.get("created_at"),
                 acc.get("first_seen") or datetime.now(timezone.utc).isoformat(),
                 1 if acc.get("enriched") else 0,
@@ -482,10 +528,11 @@ def _ensure_seed_dataset() -> None:
 
         # Insert seed posts into SQLite
         for ev in events:
+            prepared = apply_prepare({"text": ev["text"], "links": ev.get("links") or [], "hashtags": ev.get("hashtags") or []})
             upsert_account({
                 "did": ev["did"],
                 "handle": ev["handle"],
-                "alias": f"A-{ev['did'][-6:].upper()}",
+                "alias": generate_hash_alias(ev["did"]),
                 "created_at": ev["authorCreatedAt"],
                 "first_seen": ev["createdAt"],
                 "enriched": True,
@@ -501,10 +548,10 @@ def _ensure_seed_dataset() -> None:
                     ev["id"],
                     ev["did"],
                     ev["text"],
-                    ev["text"].lower().strip(),
+                    prepared["text_norm"],
                     ev["createdAt"],
-                    json.dumps(ev.get("links") or []),
-                    json.dumps(ev.get("hashtags") or []),
+                    json.dumps(prepared["links"]),
+                    json.dumps(prepared["hashtags"]),
                 ),
             )
         conn.commit()
@@ -529,13 +576,17 @@ def _replay_jsonl_for_topic(topic_id: int, keyword: str) -> None:
                     continue
                 try:
                     ev = json.loads(line)
-                    text_lower = ev.get("text", "").lower()
-                    if kw in text_lower or kw in ev.get("topicKeyword", "").lower():
-                        # A1 FIX: pass conn=conn to prevent SQLite locking deadlock
+                    raw_text = ev.get("text", "")
+                    prepared = apply_prepare({
+                        "text": raw_text,
+                        "links": ev.get("links") or [],
+                        "hashtags": ev.get("hashtags") or [],
+                    })
+                    if kw in raw_text.lower() or kw in prepared["text_norm"] or kw in ev.get("topicKeyword", "").lower():
                         upsert_account({
                             "did": ev["did"],
                             "handle": ev.get("handle") or f"{ev['did'][-8:]}.bsky.social",
-                            "alias": f"A-{ev['did'][-6:].upper()}",
+                            "alias": generate_hash_alias(ev["did"]),
                             "created_at": ev.get("authorCreatedAt"),
                             "first_seen": ev.get("createdAt"),
                             "enriched": bool(ev.get("authorCreatedAt")),
@@ -549,12 +600,12 @@ def _replay_jsonl_for_topic(topic_id: int, keyword: str) -> None:
                             (
                                 f"replay-{ev.get('id', 'post')}-{topic_id}",
                                 ev["did"],
-                                ev["text"],
-                                text_lower,
+                                raw_text,
+                                prepared["text_norm"],
                                 ev.get("createdAt") or datetime.now(timezone.utc).isoformat(),
                                 topic_id,
-                                json.dumps(ev.get("links") or []),
-                                json.dumps(ev.get("hashtags") or []),
+                                json.dumps(prepared["links"]),
+                                json.dumps(prepared["hashtags"]),
                             ),
                         )
                 except Exception as ex:

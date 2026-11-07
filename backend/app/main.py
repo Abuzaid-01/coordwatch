@@ -31,9 +31,9 @@ async def _periodic_analyzer():
             for t_id in to_analyze:
                 try:
                     logger.info(f"Triggering periodic analysis for active topic {t_id}")
-                    # D2: Non-blocking offload
                     await asyncio.to_thread(analyze_and_persist_topic, t_id)
                 except Exception as e:
+                    ingest_state.dirty_topics.add(t_id)
                     logger.error(f"Error analyzing topic {t_id}: {e}", exc_info=True)
         except asyncio.CancelledError:
             break
@@ -66,9 +66,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="CoordWatch API — Narrative Coordination Detection Engine",
     description=(
-        "Production-grade, multi-signal detection of coordinated narrative amplification on Bluesky AT Protocol "
-        "via char 3-gram TF-IDF cosine similarity, temporal co-posting bursts, PLC account creation waves, "
-        "shared URL/hashtag amplification, and Louvain community detection."
+        "Prototype that watches a Bluesky keyword, groups accounts that post like a coordinated network, "
+        "and shows the evidence. Character 3-gram similarity, timing, account age, shared links, "
+        "and Louvain communities. A score is a lead for a person to review."
     ),
     version=settings.version,
     lifespan=lifespan,

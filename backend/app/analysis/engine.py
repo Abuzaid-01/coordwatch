@@ -11,7 +11,7 @@ from ..signals.age import compute_account_age_signal
 from ..signals.links import compute_shared_links_signal
 from .graph import build_and_partition_graph
 from .scoring import compute_cluster_score_and_reasons
-from .significance import compute_cluster_significance, apply_benjamini_hochberg_fdr
+from .significance import apply_detection_decisions, compute_cluster_significance
 
 
 def _pair_key(d1: str, d2: str) -> Tuple[str, str, str]:
@@ -28,6 +28,7 @@ def run_topic_analysis(
     min_cluster_size: int = settings.min_cluster_size,
     enable_fp_protection: bool = True,
     max_graph_nodes: int = settings.max_graph_nodes,
+    n_permutations: int = 50,
 ) -> Dict[str, Any]:
     """
     Executes full multi-signal detection, Louvain clustering, scoring,
@@ -169,16 +170,7 @@ def run_topic_analysis(
         age_days_list = [max(0.0, (now_ts - ts) / 86400.0) for ts in created_timestamps]
         median_age_days = age_days_list[len(age_days_list) // 2] if age_days_list else 30.0
 
-        # Compute null-model permutation significance
-        sig_result = compute_cluster_significance(
-            cluster_dids=comm_dids,
-            cluster_score=raw_score if "raw_score" in locals() else 50.0,
-            all_topic_posts=posts,
-            n_permutations=50,
-            seed=42 + cluster_seq,
-        )
-
-        # Phase 5.5 False-Positive Protection & D1 Benign Explanations
+        # Score first so the permutation test receives THIS cluster's raw score.
         scored = compute_cluster_score_and_reasons(
             comm_dids,
             sig_breakdown,
@@ -186,13 +178,34 @@ def run_topic_analysis(
             median_age_days=median_age_days,
             enable_fp_protection=enable_fp_protection,
             cluster_posts=cluster_posts,
-            empirical_p_value=sig_result.get("p_value"),
+            empirical_p_value=None,
+        )
+        raw_score = scored["raw_score"]
+        sig_result = compute_cluster_significance(
+            cluster_dids=comm_dids,
+            cluster_score=raw_score,
+            all_topic_posts=posts,
+            n_permutations=n_permutations,
+            seed=42 + cluster_seq,
         )
 
         final_score = scored["score"]
-        raw_score = scored["raw_score"]
         discount_applied = scored["discount_applied"]
         reasons = list(scored["reasons"])
+        p_value = sig_result.get("p_value")
+        if sig_result.get("status") == "tested" and p_value is not None:
+            if p_value < 0.01:
+                reasons.append(
+                    f"Statistically significant under permutation null-model "
+                    f"(p = {p_value:.4f}, {sig_result.get('n_permutations', n_permutations)} permutations)"
+                )
+            else:
+                reasons.append(
+                    f"Permutation null-model p-value = {p_value:.4f} "
+                    f"({sig_result.get('n_permutations', n_permutations)} permutations)"
+                )
+        else:
+            reasons.append("Permutation test not run for this cluster.")
 
         # Detailed Evidence Reasons
         if text_sig >= 0.40:
@@ -264,8 +277,7 @@ def run_topic_analysis(
             "computedAt": datetime.now(timezone.utc).isoformat(),
         })
 
-    # Apply Benjamini-Hochberg FDR control
-    clusters = apply_benjamini_hochberg_fdr(clusters)
+    clusters = apply_detection_decisions(clusters)
     clusters.sort(key=lambda c: (c["score"], c["size"]), reverse=True)
 
     # 5. Graph Assembly (Nodes + Links with capping)

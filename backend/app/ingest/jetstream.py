@@ -11,7 +11,6 @@ Includes Stage C & D improvements:
 
 import asyncio
 from datetime import datetime, timezone
-import hashlib
 import json
 import logging
 from pathlib import Path
@@ -20,6 +19,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from ..config import settings
 from ..db import get_connection, insert_live_post, upsert_account
+from ..textutil import generate_hash_alias, prepare_post, prepare_text, urls_from_at_record
 
 logger = logging.getLogger(__name__)
 
@@ -35,47 +35,7 @@ MULTISPACE_REGEX = re.compile(r"\s+")
 
 def normalize_text(text: str) -> str:
     """Lowercase, strip URLs and @mentions, strip punctuation noise, collapse spaces."""
-    if not text:
-        return ""
-    cleaned = text.lower()
-    cleaned = URL_REGEX.sub(" ", cleaned)
-    cleaned = MENTION_REGEX.sub(" ", cleaned)
-    cleaned = NON_ALNUM_REGEX.sub(" ", cleaned)
-    cleaned = MULTISPACE_REGEX.sub(" ", cleaned)
-    return cleaned.strip()
-
-
-def extract_links(text: str) -> List[str]:
-    if not text:
-        return []
-    matches = URL_REGEX.findall(text)
-    results: List[str] = []
-    for raw in matches:
-        stripped = raw.strip().rstrip(".,;!?)]")
-        cleaned = re.sub(r"^https?://", "", stripped, flags=re.IGNORECASE)
-        cleaned = re.sub(r"^www\.", "", cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"[?&]utm_[^&]+", "", cleaned).rstrip("/")
-        if "." in cleaned and cleaned.lower() not in results:
-            results.append(cleaned.lower())
-    return results
-
-
-def extract_hashtags(text: str) -> List[str]:
-    if not text:
-        return []
-    matches = HASHTAG_REGEX.findall(text)
-    seen: List[str] = []
-    for tag in matches:
-        low = tag.lower()
-        if low not in seen:
-            seen.append(low)
-    return seen
-
-
-def generate_hash_alias(did: str) -> str:
-    """C5: 6 hex characters to avoid collision (16.7M unique aliases)."""
-    digest = hashlib.sha256(did.strip().encode("utf-8")).hexdigest()
-    return f"A-{digest[:6].upper()}"
+    return prepare_text(text)
 
 
 class TopicRegistry:
@@ -129,6 +89,11 @@ class IngestState:
         self.last_cursor: Optional[int] = None
         self.queue_size = 0
         self.events_per_sec = 0.0
+        self.dropped_events = 0
+        self.high_water_us: Optional[int] = None
+        # True after QueueFull until the next connection. The mark must not
+        # jump past an event that was not queued.
+        self.cursor_blocked = False
         self.recent_live_sample: List[Dict[str, Any]] = []
         self.dirty_topics: Set[int] = set()
 
@@ -144,8 +109,57 @@ class IngestState:
             "lastCursor": self.last_cursor,
             "queueSize": self.queue_size,
             "eventsPerSec": round(self.events_per_sec, 1),
+            "droppedEvents": self.dropped_events,
+            "cursorBlocked": self.cursor_blocked,
             "recentLiveSample": self.recent_live_sample[:10],
         }
+
+
+def begin_firehose_connection(state: IngestState) -> None:
+    """A new socket replays from the durable cursor, so the in-memory mark restarts there."""
+    state.connected = True
+    state.cursor_blocked = False
+    state.high_water_us = state.last_cursor
+
+
+def note_firehose_position(
+    state: IngestState,
+    time_us: Optional[int],
+    *,
+    matched: bool,
+    fully_queued: bool,
+    queue_empty: bool = False,
+) -> None:
+    """Move the high-water mark for one firehose event.
+
+    A post that matched no topic is fully handled, so the mark moves at once.
+    A matching post moves the mark only after every topic copy was queued.
+    QueueFull freezes the mark: a later event must not acknowledge past the drop.
+    When the queue is empty, a non-matching event is also a durable cursor,
+    because nothing earlier is still waiting to be written.
+    """
+    if not time_us:
+        return
+    if matched and not fully_queued:
+        state.cursor_blocked = True
+        return
+    if state.cursor_blocked:
+        return
+    state.high_water_us = int(time_us)
+    if (not matched) and queue_empty:
+        state.last_cursor = state.high_water_us
+
+
+def ack_durable_cursor(state: IngestState, *, queue_empty: bool, committed_us: int) -> None:
+    """Advance last_cursor only through events that are stored and not past a drop."""
+    if state.cursor_blocked:
+        if committed_us and (state.high_water_us is None or committed_us <= state.high_water_us):
+            state.last_cursor = int(committed_us)
+        return
+    if queue_empty and state.high_water_us:
+        state.last_cursor = state.high_water_us
+    elif committed_us:
+        state.last_cursor = int(committed_us)
 
 
 ingest_state = IngestState()
@@ -181,12 +195,19 @@ async def _batch_insert_worker():
             if batch:
                 conn = get_connection()
                 try:
+                    committed_us = 0
                     for item in batch:
                         upsert_account(item["account"], conn=conn)
                         insert_live_post(item["post"], conn=conn)
                         ingest_state.live_posts_ingested += 1
                         ingest_state.dirty_topics.add(item["post"]["topic_id"])
+                        committed_us = max(committed_us, int(item.get("time_us") or 0))
                     conn.commit()
+                    ack_durable_cursor(
+                        ingest_state,
+                        queue_empty=post_queue.empty(),
+                        committed_us=committed_us,
+                    )
                 finally:
                     conn.close()
 
@@ -226,7 +247,7 @@ async def run_jetstream_ingestor():
         ingest_state.endpoint = connect_url
         try:
             async with websockets.connect(connect_url, ping_interval=25, open_timeout=8.0) as ws:
-                ingest_state.connected = True
+                begin_firehose_connection(ingest_state)
                 backoff = 2.0
                 logger.info(f"Connected to Bluesky Jetstream at {target_url}")
 
@@ -239,8 +260,6 @@ async def run_jetstream_ingestor():
                     ingest_state.total_events_scanned += 1
                     ingest_state.last_event_at = datetime.now(timezone.utc).isoformat()
                     time_us = event.get("time_us")
-                    if time_us:
-                        ingest_state.last_cursor = time_us
 
                     # Measure event speed
                     now_ts = datetime.now(timezone.utc).timestamp()
@@ -272,19 +291,26 @@ async def run_jetstream_ingestor():
                     # D1: Check matching topics in memory (fast)
                     matched_topics = topic_registry.match(text)
                     if not matched_topics:
+                        note_firehose_position(
+                            ingest_state,
+                            time_us,
+                            matched=False,
+                            fully_queued=False,
+                            queue_empty=post_queue.empty(),
+                        )
                         continue
 
                     did = event.get("did", "")
                     created_at = record.get("createdAt") or datetime.now(timezone.utc).isoformat()
                     alias = generate_hash_alias(did)
-                    norm = normalize_text(text)
-                    links = extract_links(text)
-                    tags = extract_hashtags(text)
+                    prepared = prepare_post(text, extra_urls=urls_from_at_record(record))
 
+                    fully_queued = True
                     for t in matched_topics:
                         post_id = f"live-{did[-8:]}-{commit.get('rkey', '') or int(datetime.now().timestamp())}"
                         try:
                             post_queue.put_nowait({
+                                "time_us": time_us,
                                 "account": {
                                     "did": did,
                                     "handle": f"{did[-8:]}.bsky.social",
@@ -297,26 +323,34 @@ async def run_jetstream_ingestor():
                                     "id": post_id,
                                     "did": did,
                                     "text": text,
-                                    "text_norm": norm,
+                                    "text_norm": prepared["text_norm"],
                                     "created_at": created_at,
                                     "topic_id": t["id"],
-                                    "links": links,
-                                    "hashtags": tags,
+                                    "links": prepared["links"],
+                                    "hashtags": prepared["hashtags"],
                                     "source": "live",
                                 }
                             })
+                            ingest_state.recent_live_sample.insert(0, {
+                                "did": did,
+                                "alias": alias,
+                                "text": text[:180],
+                                "matchedTopic": t["keyword"],
+                                "createdAt": created_at,
+                            })
+                            if len(ingest_state.recent_live_sample) > 15:
+                                ingest_state.recent_live_sample.pop()
                         except asyncio.QueueFull:
-                            logger.warning("Post queue is full; dropping event to preserve stability.")
-
-                        ingest_state.recent_live_sample.insert(0, {
-                            "did": did,
-                            "alias": alias,
-                            "text": text[:180],
-                            "matchedTopic": t["keyword"],
-                            "createdAt": created_at,
-                        })
-                        if len(ingest_state.recent_live_sample) > 15:
-                            ingest_state.recent_live_sample.pop()
+                            ingest_state.dropped_events += 1
+                            fully_queued = False
+                            logger.warning("Post queue is full; dropping event without advancing the cursor.")
+                    note_firehose_position(
+                        ingest_state,
+                        time_us,
+                        matched=True,
+                        fully_queued=fully_queued,
+                        queue_empty=post_queue.empty(),
+                    )
 
         except Exception as e:
             ingest_state.connected = False

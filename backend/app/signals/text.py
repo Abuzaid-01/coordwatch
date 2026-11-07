@@ -54,42 +54,55 @@ def compute_text_similarity_signal(
 
     if SKLEARN_AVAILABLE:
         texts = [p.get("text_norm") or p.get("textNorm", "") for p in valid]
-        vec = TfidfVectorizer(analyzer="char", ngram_range=(3, 3), min_df=1)
-        tfidf_mat = vec.fit_transform(texts)
-        sim_mat = tfidf_mat.dot(tfidf_mat.T)
+        origin = valid[0]["_ts"]
+        buckets: Dict[int, List[int]] = {}
+        for idx, post in enumerate(valid):
+            bucket = int(max(0.0, post["_ts"] - origin) // max_window_sec)
+            buckets.setdefault(bucket, []).append(idx)
 
-        for i in range(n_docs):
+        def record_pair(i: int, j: int, sim_val: float) -> None:
             p_a = valid[i]
-            norm_a = texts[i]
-            ts_a = p_a["_ts"]
+            p_b = valid[j]
+            if abs(p_b["_ts"] - p_a["_ts"]) > max_window_sec:
+                return
+            if p_a["did"] == p_b["did"]:
+                return
+            is_exact = texts[i] == texts[j]
+            sim = 1.0 if is_exact else float(sim_val)
+            if sim < threshold:
+                return
+            key = _pair_key(p_a["did"], p_b["did"])
+            existing = best_pairs.get(key)
+            if existing:
+                existing["strength"] = max(existing["strength"], round(sim, 4))
+                existing["exact"] = existing["exact"] or is_exact
+            else:
+                best_pairs[key] = {
+                    "did_a": key[0],
+                    "did_b": key[1],
+                    "strength": round(min(1.0, sim), 4),
+                    "exact": is_exact,
+                }
 
-            # Row i in sparse matrix
-            row = sim_mat.getrow(i)
-            for j, sim_val in zip(row.indices, row.data):
-                if j <= i:
+        # Fit TF-IDF inside each 6-hour bucket and the next bucket.
+        # Pairs more than one bucket apart are outside the window.
+        for bucket, idxs in buckets.items():
+            idx_set = set(idxs)
+            neighbor = idxs + buckets.get(bucket + 1, [])
+            if len(neighbor) < 2:
+                continue
+            sub_texts = [texts[i] for i in neighbor]
+            vec = TfidfVectorizer(analyzer="char", ngram_range=(3, 3), min_df=1)
+            tfidf_mat = vec.fit_transform(sub_texts)
+            sim_mat = tfidf_mat.dot(tfidf_mat.T)
+            for local_i, global_i in enumerate(neighbor):
+                if global_i not in idx_set:
                     continue
-                p_b = valid[j]
-                if abs(p_b["_ts"] - ts_a) > max_window_sec:
-                    continue
-                if p_a["did"] == p_b["did"]:
-                    continue
-
-                is_exact = norm_a == texts[j]
-                sim = 1.0 if is_exact else float(sim_val)
-
-                if sim >= threshold:
-                    key = _pair_key(p_a["did"], p_b["did"])
-                    existing = best_pairs.get(key)
-                    if existing:
-                        existing["strength"] = max(existing["strength"], round(sim, 4))
-                        existing["exact"] = existing["exact"] or is_exact
-                    else:
-                        best_pairs[key] = {
-                            "did_a": key[0],
-                            "did_b": key[1],
-                            "strength": round(min(1.0, sim), 4),
-                            "exact": is_exact,
-                        }
+                row = sim_mat.getrow(local_i)
+                for local_j, sim_val in zip(row.indices, row.data):
+                    if local_j <= local_i:
+                        continue
+                    record_pair(global_i, neighbor[local_j], float(sim_val))
     else:
         # Fallback pure-Python char 3-gram TF-IDF implementation
         grams_list = [_char_ngrams(p.get("text_norm") or p.get("textNorm", ""), 3) for p in valid]

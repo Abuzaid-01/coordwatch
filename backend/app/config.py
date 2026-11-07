@@ -1,5 +1,5 @@
 """CoordWatch Configuration Settings."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import os
 
@@ -17,8 +17,8 @@ class Settings:
     app_name: str = "CoordWatch API — Narrative Coordination Detection Engine"
     version: str = "1.0.0"
     data_dir: Path = DATA_DIR
-    database_path: Path = Path(os.getenv("COORDWATCH_DB_PATH", DEFAULT_DB_PATH))
-    database_url: str = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
+    database_path: Path = field(default_factory=lambda: Path(os.getenv("COORDWATCH_DB_PATH", str(DEFAULT_DB_PATH))))
+    database_url: str = ""
     sample_jsonl_path: Path = Path(os.getenv("SAMPLE_JSONL_PATH", DEFAULT_JSONL_PATH))
     demo_seed_jsonl_path: Path = Path(os.getenv("DEMO_SEED_JSONL_PATH", DEFAULT_DEMO_SEED_PATH))
 
@@ -58,6 +58,11 @@ class Settings:
     # False-positive discount factors
     fp_discount_established_dispersed: float = 0.48  # -52% discount
     fp_discount_established_only: float = 0.62       # -38% discount
+
+    def __post_init__(self) -> None:
+        self.database_path = Path(self.database_path)
+        # One file. SQLAlchemy and sqlite3 both open this path.
+        self.database_url = f"sqlite:///{self.database_path}"
 
 
 settings = Settings()

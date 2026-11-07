@@ -13,35 +13,31 @@ import sys
 
 from ..config import settings
 from ..db import get_connection, init_db
-from .simulator import run_full_evaluation_suite
+from .benchmark_v2 import run_benchmark_v2_suite
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("eval_runner")
 
 
-def run_and_store_evaluation(seeds=(42, 43, 44), organic_count: int = 500) -> dict:
+def run_and_store_evaluation(seeds=None, organic_count: int = 200) -> dict:
     init_db()
-    logger.info(f"Starting CoordWatch Ground-Truth Benchmark across seeds {seeds} with {organic_count} organic accounts...")
-
-    all_results = []
-    for s in seeds:
-        logger.info(f"Running benchmark with seed={s}...")
-        res = run_full_evaluation_suite(organic_count=organic_count, seed=s)
-        all_results.append(res)
-
-    # Average metrics over seeds
-    avg_p = sum(r["precision"] for r in all_results) / len(all_results)
-    avg_r = sum(r["recall"] for r in all_results) / len(all_results)
-    avg_f1 = sum(r["f1"] for r in all_results) / len(all_results)
-
-    final_report = all_results[0]
-    final_report["multiSeedSummary"] = {
-        "seeds": list(seeds),
-        "meanPrecision": round(avg_p, 3),
-        "meanRecall": round(avg_r, 3),
-        "meanF1": round(avg_f1, 3),
-        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
-    }
+    dev_seeds = list(seeds or list(range(42, 52)))
+    test_seeds = [seed + 100 for seed in dev_seeds]
+    logger.info(
+        "Published benchmark: dev seeds %s, test seeds %s, organic=%s",
+        dev_seeds, test_seeds, organic_count,
+    )
+    final_report = run_benchmark_v2_suite(
+        seeds=dev_seeds,
+        test_seeds=test_seeds,
+        organic_count=organic_count,
+        n_permutations=200,
+        evasion_seeds=dev_seeds,
+        label="published",
+    )
+    avg_p = final_report.get("precision") or 0
+    avg_r = final_report.get("recall") or 0
+    avg_f1 = final_report.get("f1") or 0
 
     # Store into evaluation_runs table
     conn = get_connection()
@@ -59,7 +55,7 @@ def run_and_store_evaluation(seeds=(42, 43, 44), organic_count: int = 500) -> di
     print("\n" + "=" * 60)
     print("COORDWATCH EVALUATION BENCHMARK RESULTS")
     print("=" * 60)
-    print(f"Seeds evaluated: {seeds}")
+    print(f"Seeds evaluated: {dev_seeds}")
     print(f"Precision:       {avg_p:.3f}")
     print(f"Recall:          {avg_r:.3f}")
     print(f"F1 Score:        {avg_f1:.3f}")

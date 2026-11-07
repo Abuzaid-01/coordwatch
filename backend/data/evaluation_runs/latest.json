@@ -1,192 +1,948 @@
 {
-  "computedAt": "2026-11-05T16:42:38.828118+00:00",
+  "computedAt": "2026-11-07T06:10:14.071261+00:00",
+  "label": "published",
+  "splitDescription": "same 12 families and all 10 hard negatives; dev and test differ by seed",
   "seedsEvaluated": [
     42,
     43,
-    44
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51
+  ],
+  "testSeeds": [
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151
   ],
   "organicCountPerSeed": 200,
+  "nPermutations": 200,
+  "organicAccounts": 200,
+  "plantedBotAccounts": 171,
+  "totalAccounts": 460,
+  "precision": 0.92,
+  "recall": 0.5345,
+  "f1": 0.66,
+  "truePositives": 133,
+  "falsePositives": 6,
+  "falseNegatives": 38,
   "devSummary": {
     "precision": {
-      "mean": 0.5217,
-      "std": 0.1573,
-      "ci_low": 0.3158,
-      "ci_high": 0.6977
+      "mean": 0.92,
+      "std": 0.065,
+      "ci_low": 0.8738,
+      "ci_high": 0.946,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.9568,
+        0.9326,
+        0.92,
+        0.9417,
+        0.9549,
+        0.9375,
+        0.9483,
+        0.9412,
+        0.9394,
+        0.7273
+      ],
+      "note": ""
     },
     "recall": {
-      "mean": 0.3852,
-      "std": 0.2188,
-      "ci_low": 0.1333,
-      "ci_high": 0.6667
+      "mean": 0.5345,
+      "std": 0.1817,
+      "ci_low": 0.4105,
+      "ci_high": 0.6316,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.7778,
+        0.4854,
+        0.4035,
+        0.5673,
+        0.7427,
+        0.5263,
+        0.6433,
+        0.5614,
+        0.5439,
+        0.0936
+      ],
+      "note": ""
     },
     "f1": {
-      "mean": 0.4339,
-      "std": 0.2018,
-      "ci_low": 0.1875,
-      "ci_high": 0.6818
+      "mean": 0.66,
+      "std": 0.1847,
+      "ci_low": 0.5264,
+      "ci_high": 0.752,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.8581,
+        0.6385,
+        0.561,
+        0.7081,
+        0.8355,
+        0.6741,
+        0.7666,
+        0.7033,
+        0.6889,
+        0.1659
+      ],
+      "note": ""
     },
     "fp_per_1000": {
-      "mean": 130.0,
+      "mean": 0.0,
       "std": 0.0,
-      "ci_low": 130.0,
-      "ci_high": 130.0
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "note": ""
+    },
+    "fp_per_1000_organic": {
+      "mean": 0.0,
+      "std": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "note": ""
     },
     "pr_auc": {
-      "mean": 0.4578,
-      "std": 0.1362,
-      "ci_low": 0.3375,
-      "ci_high": 0.6483
+      "mean": 0.6892,
+      "std": 0.0835,
+      "ci_low": 0.6356,
+      "ci_high": 0.7355,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.7926,
+        0.6948,
+        0.6744,
+        0.7841,
+        0.7431,
+        0.6591,
+        0.7277,
+        0.7297,
+        0.5545,
+        0.5321
+      ],
+      "note": ""
     },
     "campaign_recall": {
-      "mean": 0.3889,
-      "std": 0.2079,
-      "ci_low": 0.1667,
-      "ci_high": 0.6667
+      "mean": 0.525,
+      "std": 0.1789,
+      "ci_low": 0.4083,
+      "ci_high": 0.6167,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.75,
+        0.5,
+        0.4167,
+        0.5833,
+        0.75,
+        0.5,
+        0.5833,
+        0.5,
+        0.5833,
+        0.0833
+      ],
+      "note": ""
     },
     "cluster_purity": {
       "mean": 1.0,
       "std": 0.0,
       "ci_low": 1.0,
-      "ci_high": 1.0
+      "ci_high": 1.0,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "note": ""
     },
     "hard_neg_flag_rate": {
-      "mean": 0.6,
+      "mean": 0.1,
       "std": 0.0,
-      "ci_low": 0.6,
-      "ci_high": 0.6
+      "ci_low": 0.1,
+      "ci_high": 0.1,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1
+      ],
+      "note": ""
     }
   },
   "testSummary": {
     "precision": {
-      "mean": 1.0,
-      "std": 0.0,
-      "ci_low": 1.0,
-      "ci_high": 1.0
+      "mean": 0.9085,
+      "std": 0.0644,
+      "ci_low": 0.8623,
+      "ci_high": 0.9389,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.9492,
+        0.9469,
+        0.9118,
+        0.7241,
+        0.9211,
+        0.8868,
+        0.9348,
+        0.92,
+        0.9531,
+        0.9375
+      ],
+      "note": ""
     },
     "recall": {
-      "mean": 1.0,
-      "std": 0.0,
-      "ci_low": 1.0,
-      "ci_high": 1.0
+      "mean": 0.4719,
+      "std": 0.1517,
+      "ci_low": 0.3784,
+      "ci_high": 0.5696,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.655,
+        0.6257,
+        0.3626,
+        0.2456,
+        0.4094,
+        0.2749,
+        0.5029,
+        0.4035,
+        0.7135,
+        0.5263
+      ],
+      "note": ""
     },
     "f1": {
-      "mean": 1.0,
-      "std": 0.0,
-      "ci_low": 1.0,
-      "ci_high": 1.0
+      "mean": 0.6106,
+      "std": 0.1429,
+      "ci_low": 0.5194,
+      "ci_high": 0.7017,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.7751,
+        0.7535,
+        0.5189,
+        0.3668,
+        0.5669,
+        0.4197,
+        0.654,
+        0.561,
+        0.8161,
+        0.6741
+      ],
+      "note": ""
     },
     "fp_per_1000": {
       "mean": 0.0,
       "std": 0.0,
       "ci_low": 0.0,
-      "ci_high": 0.0
+      "ci_high": 0.0,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "note": ""
+    },
+    "fp_per_1000_organic": {
+      "mean": 0.0,
+      "std": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "note": ""
     },
     "pr_auc": {
-      "mean": 0.7399,
-      "std": 0.0387,
-      "ci_low": 0.6938,
-      "ci_high": 0.7885
+      "mean": 0.6516,
+      "std": 0.0836,
+      "ci_low": 0.5999,
+      "ci_high": 0.7006,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.7556,
+        0.7489,
+        0.6635,
+        0.5023,
+        0.725,
+        0.5782,
+        0.6857,
+        0.6547,
+        0.5298,
+        0.6719
+      ],
+      "note": ""
     },
     "campaign_recall": {
-      "mean": 1.0,
-      "std": 0.0,
-      "ci_low": 1.0,
-      "ci_high": 1.0
+      "mean": 0.4667,
+      "std": 0.1546,
+      "ci_low": 0.375,
+      "ci_high": 0.5667,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.6667,
+        0.6667,
+        0.3333,
+        0.25,
+        0.4167,
+        0.25,
+        0.5,
+        0.4167,
+        0.6667,
+        0.5
+      ],
+      "note": ""
     },
     "cluster_purity": {
       "mean": 1.0,
       "std": 0.0,
       "ci_low": 1.0,
-      "ci_high": 1.0
+      "ci_high": 1.0,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "note": ""
     },
     "hard_neg_flag_rate": {
-      "mean": 0.0,
-      "std": 0.0,
-      "ci_low": 0.0,
-      "ci_high": 0.0
+      "mean": 0.11,
+      "std": 0.03,
+      "ci_low": 0.1,
+      "ci_high": 0.13,
+      "n": 10,
+      "ci_withheld": false,
+      "values": [
+        0.1,
+        0.1,
+        0.1,
+        0.2,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1
+      ],
+      "note": ""
     }
   },
   "baselines": {
     "exact_duplicate_only": {
-      "name": "Exact-Duplicate Text Only",
-      "precision": 0.0,
-      "recall": 0.0,
-      "f1": 0.0
+      "name": "Exact-duplicate text, three accounts inside 6h",
+      "precision": 0.4037,
+      "recall": 0.8322,
+      "f1": 0.5436
     },
     "random_baseline": {
-      "name": "Random Guessing Baseline",
-      "precision": 0.272,
-      "recall": 0.5,
-      "f1": 0.231
+      "name": "Seeded coin-flip at 0.5",
+      "precision": 0.3833,
+      "recall": 0.5257,
+      "f1": 0.4433
     }
   },
   "ablations": {
     "full_pipeline": {
-      "name": "Full Multi-Signal Pipeline + Benign Explanations",
-      "precision": 0.5217,
-      "recall": 0.3852,
-      "f1": 0.4339,
-      "fp_per_1000": 130.0
+      "name": "Full pipeline with benign news rule",
+      "precision": 0.92,
+      "recall": 0.5345,
+      "f1": 0.66,
+      "fp_per_1000": 0.0,
+      "fp_per_1000_organic": 0.0,
+      "hard_neg_flag_rate": 0.1
     },
     "without_benign_explanations": {
-      "name": "Without Benign-Explanation Rules (Raw Graph Only)",
-      "precision": 0.3158,
-      "recall": 0.1333,
-      "f1": 0.1875,
-      "fp_per_1000": 130.0
+      "name": "Same seeds with benign news rule off",
+      "precision": 0.8232,
+      "recall": 0.5427,
+      "f1": 0.6419,
+      "fp_per_1000": 0.0,
+      "fp_per_1000_organic": 0.0,
+      "hard_neg_flag_rate": 0.2
     }
   },
   "nullControl": {
-    "organicAccounts": 300,
+    "organicAccounts": 120,
     "falsePositivesDetected": 0,
     "clustersFlagged": 0,
-    "status": "PASS: Zero false clusters on pure organic chatter"
+    "shuffledAuthorCampaignRecall": 0.0,
+    "unshuffledCampaignRecall": 0.75,
+    "status": "PASS"
   },
   "evasionBoundaries": [
     {
-      "evasion": "LLM Paraphrase + 6h Jitter",
-      "cost": "High",
-      "intensity": "90%",
-      "observedRecall": 0.38,
-      "status": "Degrades (Reported honestly)"
+      "id": "paraphrase_6h",
+      "evasion": "Paraphrase plus 6h jitter",
+      "familyId": "F3",
+      "seed": 42,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
     },
     {
-      "evasion": "Aged Sleeper Accounts (Copypasta)",
-      "cost": "Medium",
-      "intensity": "100%",
-      "observedRecall": 0.88,
-      "status": "Detected by copypasta & URL signals"
+      "id": "sleeper_copypasta",
+      "evasion": "Aged sleeper copypasta",
+      "familyId": "F7",
+      "seed": 42,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
     },
     {
-      "evasion": "Camouflage Chatter (5:1 organic)",
-      "cost": "Medium",
-      "intensity": "80%",
-      "observedRecall": 0.62,
-      "status": "Moderate drop"
+      "id": "camouflage",
+      "evasion": "Camouflage chatter",
+      "familyId": "F10",
+      "seed": 42,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
     },
     {
-      "evasion": "Slow Drip Spread (>12 hours)",
-      "cost": "Low",
-      "intensity": "75%",
-      "observedRecall": 0.44,
-      "status": "Degrades temporal burst signal"
+      "id": "slow_drip_12h",
+      "evasion": "Slow drip over 12h",
+      "familyId": "F8",
+      "seed": 42,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
     },
     {
-      "evasion": "Combined Evasion (Paraphrase+Jitter+Aged)",
-      "cost": "Very High",
-      "intensity": "100%",
-      "observedRecall": 0.28,
-      "status": "Under research (Major limitation)"
+      "id": "combined",
+      "evasion": "Paraphrase plus jitter plus aged accounts",
+      "familyId": "F7",
+      "seed": 42,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "paraphrase_6h",
+      "evasion": "Paraphrase plus 6h jitter",
+      "familyId": "F3",
+      "seed": 43,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "sleeper_copypasta",
+      "evasion": "Aged sleeper copypasta",
+      "familyId": "F7",
+      "seed": 43,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "camouflage",
+      "evasion": "Camouflage chatter",
+      "familyId": "F10",
+      "seed": 43,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "slow_drip_12h",
+      "evasion": "Slow drip over 12h",
+      "familyId": "F8",
+      "seed": 43,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "combined",
+      "evasion": "Paraphrase plus jitter plus aged accounts",
+      "familyId": "F7",
+      "seed": 43,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "paraphrase_6h",
+      "evasion": "Paraphrase plus 6h jitter",
+      "familyId": "F3",
+      "seed": 44,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "sleeper_copypasta",
+      "evasion": "Aged sleeper copypasta",
+      "familyId": "F7",
+      "seed": 44,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "camouflage",
+      "evasion": "Camouflage chatter",
+      "familyId": "F10",
+      "seed": 44,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "slow_drip_12h",
+      "evasion": "Slow drip over 12h",
+      "familyId": "F8",
+      "seed": 44,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "combined",
+      "evasion": "Paraphrase plus jitter plus aged accounts",
+      "familyId": "F7",
+      "seed": 44,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "paraphrase_6h",
+      "evasion": "Paraphrase plus 6h jitter",
+      "familyId": "F3",
+      "seed": 45,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "sleeper_copypasta",
+      "evasion": "Aged sleeper copypasta",
+      "familyId": "F7",
+      "seed": 45,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "camouflage",
+      "evasion": "Camouflage chatter",
+      "familyId": "F10",
+      "seed": 45,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "slow_drip_12h",
+      "evasion": "Slow drip over 12h",
+      "familyId": "F8",
+      "seed": 45,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "combined",
+      "evasion": "Paraphrase plus jitter plus aged accounts",
+      "familyId": "F7",
+      "seed": 45,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "paraphrase_6h",
+      "evasion": "Paraphrase plus 6h jitter",
+      "familyId": "F3",
+      "seed": 46,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "sleeper_copypasta",
+      "evasion": "Aged sleeper copypasta",
+      "familyId": "F7",
+      "seed": 46,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "camouflage",
+      "evasion": "Camouflage chatter",
+      "familyId": "F10",
+      "seed": 46,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "slow_drip_12h",
+      "evasion": "Slow drip over 12h",
+      "familyId": "F8",
+      "seed": 46,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "combined",
+      "evasion": "Paraphrase plus jitter plus aged accounts",
+      "familyId": "F7",
+      "seed": 46,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "paraphrase_6h",
+      "evasion": "Paraphrase plus 6h jitter",
+      "familyId": "F3",
+      "seed": 47,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "sleeper_copypasta",
+      "evasion": "Aged sleeper copypasta",
+      "familyId": "F7",
+      "seed": 47,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "camouflage",
+      "evasion": "Camouflage chatter",
+      "familyId": "F10",
+      "seed": 47,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "slow_drip_12h",
+      "evasion": "Slow drip over 12h",
+      "familyId": "F8",
+      "seed": 47,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "combined",
+      "evasion": "Paraphrase plus jitter plus aged accounts",
+      "familyId": "F7",
+      "seed": 47,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "paraphrase_6h",
+      "evasion": "Paraphrase plus 6h jitter",
+      "familyId": "F3",
+      "seed": 48,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "sleeper_copypasta",
+      "evasion": "Aged sleeper copypasta",
+      "familyId": "F7",
+      "seed": 48,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "camouflage",
+      "evasion": "Camouflage chatter",
+      "familyId": "F10",
+      "seed": 48,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "slow_drip_12h",
+      "evasion": "Slow drip over 12h",
+      "familyId": "F8",
+      "seed": 48,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "combined",
+      "evasion": "Paraphrase plus jitter plus aged accounts",
+      "familyId": "F7",
+      "seed": 48,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "paraphrase_6h",
+      "evasion": "Paraphrase plus 6h jitter",
+      "familyId": "F3",
+      "seed": 49,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "sleeper_copypasta",
+      "evasion": "Aged sleeper copypasta",
+      "familyId": "F7",
+      "seed": 49,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "camouflage",
+      "evasion": "Camouflage chatter",
+      "familyId": "F10",
+      "seed": 49,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "slow_drip_12h",
+      "evasion": "Slow drip over 12h",
+      "familyId": "F8",
+      "seed": 49,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "combined",
+      "evasion": "Paraphrase plus jitter plus aged accounts",
+      "familyId": "F7",
+      "seed": 49,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "paraphrase_6h",
+      "evasion": "Paraphrase plus 6h jitter",
+      "familyId": "F3",
+      "seed": 50,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "sleeper_copypasta",
+      "evasion": "Aged sleeper copypasta",
+      "familyId": "F7",
+      "seed": 50,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "camouflage",
+      "evasion": "Camouflage chatter",
+      "familyId": "F10",
+      "seed": 50,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "slow_drip_12h",
+      "evasion": "Slow drip over 12h",
+      "familyId": "F8",
+      "seed": 50,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "combined",
+      "evasion": "Paraphrase plus jitter plus aged accounts",
+      "familyId": "F7",
+      "seed": 50,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "paraphrase_6h",
+      "evasion": "Paraphrase plus 6h jitter",
+      "familyId": "F3",
+      "seed": 51,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "sleeper_copypasta",
+      "evasion": "Aged sleeper copypasta",
+      "familyId": "F7",
+      "seed": 51,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "camouflage",
+      "evasion": "Camouflage chatter",
+      "familyId": "F10",
+      "seed": 51,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 1.0
+    },
+    {
+      "id": "slow_drip_12h",
+      "evasion": "Slow drip over 12h",
+      "familyId": "F8",
+      "seed": 51,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
+    },
+    {
+      "id": "combined",
+      "evasion": "Paraphrase plus jitter plus aged accounts",
+      "familyId": "F7",
+      "seed": 51,
+      "organicCount": 80,
+      "nPermutations": 50,
+      "observedRecall": 0.0
     }
   ],
+  "falsePositiveStress": {
+    "scenario": "Major Breaking Infrastructure Announcement (TfL Orbital Route Launch)",
+    "organicNewsAccounts": 65,
+    "organicUsersCount": 65,
+    "sharedHeadline": "BREAKING: Transport for London confirms new Outer Orbital Express bus loops opening across 14 boroughs https://tfl.gov.uk/news #LondonTransport",
+    "rawFlaggedWithoutProtection": 65,
+    "flaggedWithProtection": 0,
+    "falsePositiveRateBefore": 1.0,
+    "falsePositiveRateAfter": 0.0,
+    "explanation": "65 established accounts shared one TfL headline inside 4 minutes, against 120 background posts. Accounts called coordinated_inauthentic at score >= 50: 65 with the news rule off, 0 with it on."
+  },
+  "falsePositiveStressTest": {
+    "scenario": "Major Breaking Infrastructure Announcement (TfL Orbital Route Launch)",
+    "organicNewsAccounts": 65,
+    "organicUsersCount": 65,
+    "sharedHeadline": "BREAKING: Transport for London confirms new Outer Orbital Express bus loops opening across 14 boroughs https://tfl.gov.uk/news #LondonTransport",
+    "rawFlaggedWithoutProtection": 65,
+    "flaggedWithProtection": 0,
+    "falsePositiveRateBefore": 1.0,
+    "falsePositiveRateAfter": 0.0,
+    "explanation": "65 established accounts shared one TfL headline inside 4 minutes, against 120 background posts. Accounts called coordinated_inauthentic at score >= 50: 65 with the news rule off, 0 with it on."
+  },
   "hardNegatives": {
     "dev": [
       {
         "id": "H1",
         "name": "Hard Negative H1",
         "class": "coordinated_benign",
-        "flaggedAsInauthentic": true,
-        "memberFlagRatio": 1.0
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
       },
       {
         "id": "H2",
@@ -199,8 +955,8 @@
         "id": "H3",
         "name": "Hard Negative H3",
         "class": "organic",
-        "flaggedAsInauthentic": true,
-        "memberFlagRatio": 1.0
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
       },
       {
         "id": "H4",
@@ -215,118 +971,50 @@
         "class": "coordinated_benign",
         "flaggedAsInauthentic": true,
         "memberFlagRatio": 1.0
+      },
+      {
+        "id": "H6",
+        "name": "Hard Negative H6",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H7",
+        "name": "Hard Negative H7",
+        "class": "organic",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H8",
+        "name": "Hard Negative H8",
+        "class": "organic",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H9",
+        "name": "Hard Negative H9",
+        "class": "organic",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
+      },
+      {
+        "id": "H10",
+        "name": "Hard Negative H10",
+        "class": "coordinated_benign",
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
       }
     ],
     "test": [
       {
-        "id": "H6",
-        "name": "Hard Negative H6",
-        "class": "coordinated_benign",
-        "flaggedAsInauthentic": false,
-        "memberFlagRatio": 0.0
-      },
-      {
-        "id": "H7",
-        "name": "Hard Negative H7",
-        "class": "organic",
-        "flaggedAsInauthentic": false,
-        "memberFlagRatio": 0.0
-      },
-      {
-        "id": "H8",
-        "name": "Hard Negative H8",
-        "class": "organic",
-        "flaggedAsInauthentic": false,
-        "memberFlagRatio": 0.0
-      },
-      {
-        "id": "H9",
-        "name": "Hard Negative H9",
-        "class": "organic",
-        "flaggedAsInauthentic": false,
-        "memberFlagRatio": 0.0
-      },
-      {
-        "id": "H10",
-        "name": "Hard Negative H10",
-        "class": "coordinated_benign",
-        "flaggedAsInauthentic": false,
-        "memberFlagRatio": 0.0
-      }
-    ]
-  },
-  "devLatest": {
-    "acct": {
-      "tp": 60,
-      "fp": 26,
-      "fn": 30,
-      "tn": 174,
-      "precision": 0.6977,
-      "recall": 0.6667,
-      "f1": 0.6818,
-      "fp_per_1000": 130.0
-    },
-    "pr_auc": 0.3375,
-    "campaign_recall": 0.6667,
-    "campaign_breakdown": [
-      {
-        "campaign_id": "F1_Copypasta_42",
-        "name": "Family F1 (F1_Copypasta_42)",
-        "size": 18,
-        "detected_members": 18,
-        "detection_ratio": 1.0,
-        "flagged": true
-      },
-      {
-        "campaign_id": "F2_Template_42",
-        "name": "Family F2 (F2_Template_42)",
-        "size": 16,
-        "detected_members": 0,
-        "detection_ratio": 0.0,
-        "flagged": false
-      },
-      {
-        "campaign_id": "F3_Paraphrase_42",
-        "name": "Family F3 (F3_Paraphrase_42)",
-        "size": 16,
-        "detected_members": 16,
-        "detection_ratio": 1.0,
-        "flagged": true
-      },
-      {
-        "campaign_id": "F4_Hashtags_42",
-        "name": "Family F4 (F4_Hashtags_42)",
-        "size": 14,
-        "detected_members": 14,
-        "detection_ratio": 1.0,
-        "flagged": true
-      },
-      {
-        "campaign_id": "F5_Links_42",
-        "name": "Family F5 (F5_Links_42)",
-        "size": 14,
-        "detected_members": 0,
-        "detection_ratio": 0.0,
-        "flagged": false
-      },
-      {
-        "campaign_id": "F6_Reposts_42",
-        "name": "Family F6 (F6_Reposts_42)",
-        "size": 12,
-        "detected_members": 12,
-        "detection_ratio": 1.0,
-        "flagged": true
-      }
-    ],
-    "cluster_purity": 1.0,
-    "hard_negatives_flag_rate": 0.6,
-    "hard_negatives_breakdown": [
-      {
         "id": "H1",
         "name": "Hard Negative H1",
         "class": "coordinated_benign",
-        "flaggedAsInauthentic": true,
-        "memberFlagRatio": 1.0
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
       },
       {
         "id": "H2",
@@ -339,8 +1027,8 @@
         "id": "H3",
         "name": "Hard Negative H3",
         "class": "organic",
-        "flaggedAsInauthentic": true,
-        "memberFlagRatio": 1.0
+        "flaggedAsInauthentic": false,
+        "memberFlagRatio": 0.0
       },
       {
         "id": "H4",
@@ -355,165 +1043,7 @@
         "class": "coordinated_benign",
         "flaggedAsInauthentic": true,
         "memberFlagRatio": 1.0
-      }
-    ],
-    "clusters_detected": 5,
-    "total_clusters": 41,
-    "detected_bot_dids": [
-      "did:plc:f4_hashtags_42_007",
-      "did:plc:f3_paraphrase_42_011",
-      "did:plc:hn5_146_002",
-      "did:plc:hn5_146_001",
-      "did:plc:f1_copypasta_42_003",
-      "did:plc:hn3_144_005",
-      "did:plc:f6_reposts_42_006",
-      "did:plc:f1_copypasta_42_002",
-      "did:plc:f4_hashtags_42_008",
-      "did:plc:f4_hashtags_42_004",
-      "did:plc:f6_reposts_42_008",
-      "did:plc:hn3_144_000",
-      "did:plc:hn1_142_000",
-      "did:plc:f4_hashtags_42_009",
-      "did:plc:hn1_142_006",
-      "did:plc:f1_copypasta_42_016",
-      "did:plc:f1_copypasta_42_017",
-      "did:plc:hn1_142_009",
-      "did:plc:hn3_144_002",
-      "did:plc:f3_paraphrase_42_002",
-      "did:plc:hn5_146_003",
-      "did:plc:f1_copypasta_42_006",
-      "did:plc:f3_paraphrase_42_010",
-      "did:plc:hn3_144_009",
-      "did:plc:f4_hashtags_42_013",
-      "did:plc:f3_paraphrase_42_000",
-      "did:plc:f3_paraphrase_42_004",
-      "did:plc:f3_paraphrase_42_003",
-      "did:plc:f6_reposts_42_007",
-      "did:plc:f1_copypasta_42_004",
-      "did:plc:hn3_144_001",
-      "did:plc:hn3_144_008",
-      "did:plc:f3_paraphrase_42_005",
-      "did:plc:hn1_142_004",
-      "did:plc:f6_reposts_42_002",
-      "did:plc:f6_reposts_42_000",
-      "did:plc:f4_hashtags_42_005",
-      "did:plc:f1_copypasta_42_005",
-      "did:plc:f1_copypasta_42_008",
-      "did:plc:f3_paraphrase_42_008",
-      "did:plc:f4_hashtags_42_001",
-      "did:plc:f6_reposts_42_011",
-      "did:plc:f4_hashtags_42_010",
-      "did:plc:hn1_142_007",
-      "did:plc:hn3_144_004",
-      "did:plc:f3_paraphrase_42_001",
-      "did:plc:f1_copypasta_42_013",
-      "did:plc:hn5_146_000",
-      "did:plc:hn5_146_005",
-      "did:plc:hn5_146_004",
-      "did:plc:f6_reposts_42_001",
-      "did:plc:hn3_144_003",
-      "did:plc:f1_copypasta_42_014",
-      "did:plc:f1_copypasta_42_000",
-      "did:plc:f1_copypasta_42_009",
-      "did:plc:hn1_142_008",
-      "did:plc:f6_reposts_42_005",
-      "did:plc:f4_hashtags_42_002",
-      "did:plc:f3_paraphrase_42_009",
-      "did:plc:f1_copypasta_42_011",
-      "did:plc:f3_paraphrase_42_013",
-      "did:plc:f3_paraphrase_42_006",
-      "did:plc:f1_copypasta_42_001",
-      "did:plc:hn1_142_005",
-      "did:plc:f3_paraphrase_42_015",
-      "did:plc:hn1_142_001",
-      "did:plc:f6_reposts_42_003",
-      "did:plc:f1_copypasta_42_010",
-      "did:plc:f4_hashtags_42_011",
-      "did:plc:f1_copypasta_42_015",
-      "did:plc:f3_paraphrase_42_012",
-      "did:plc:hn1_142_003",
-      "did:plc:hn3_144_007",
-      "did:plc:f6_reposts_42_009",
-      "did:plc:f6_reposts_42_010",
-      "did:plc:hn1_142_002",
-      "did:plc:f3_paraphrase_42_014",
-      "did:plc:f1_copypasta_42_007",
-      "did:plc:f1_copypasta_42_012",
-      "did:plc:f3_paraphrase_42_007",
-      "did:plc:hn3_144_006",
-      "did:plc:f4_hashtags_42_000",
-      "did:plc:f6_reposts_42_004",
-      "did:plc:f4_hashtags_42_012",
-      "did:plc:f4_hashtags_42_003",
-      "did:plc:f4_hashtags_42_006"
-    ]
-  },
-  "testLatest": {
-    "acct": {
-      "tp": 81,
-      "fp": 0,
-      "fn": 0,
-      "tn": 200,
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0,
-      "fp_per_1000": 0.0
-    },
-    "pr_auc": 0.6938,
-    "campaign_recall": 1.0,
-    "campaign_breakdown": [
-      {
-        "campaign_id": "F7_Sleepers_42",
-        "name": "Family F7 (F7_Sleepers_42)",
-        "size": 16,
-        "detected_members": 16,
-        "detection_ratio": 1.0,
-        "flagged": true
       },
-      {
-        "campaign_id": "F8_SlowDrip_42",
-        "name": "Family F8 (F8_SlowDrip_42)",
-        "size": 14,
-        "detected_members": 14,
-        "detection_ratio": 1.0,
-        "flagged": true
-      },
-      {
-        "campaign_id": "F9_Hybrid_42",
-        "name": "Family F9 (F9_Hybrid_42)",
-        "size": 16,
-        "detected_members": 16,
-        "detection_ratio": 1.0,
-        "flagged": true
-      },
-      {
-        "campaign_id": "F10_Camo_42",
-        "name": "Family F10 (F10_Camo_42)",
-        "size": 14,
-        "detected_members": 14,
-        "detection_ratio": 1.0,
-        "flagged": true
-      },
-      {
-        "campaign_id": "F11_SybilScattered_42",
-        "name": "Family F11 (F11_SybilScattered_42)",
-        "size": 16,
-        "detected_members": 16,
-        "detection_ratio": 1.0,
-        "flagged": true
-      },
-      {
-        "campaign_id": "F12_SmallCell_42",
-        "name": "Family F12 (F12_SmallCell_42)",
-        "size": 5,
-        "detected_members": 5,
-        "detection_ratio": 1.0,
-        "flagged": true
-      }
-    ],
-    "cluster_purity": 1.0,
-    "hard_negatives_flag_rate": 0.0,
-    "hard_negatives_breakdown": [
       {
         "id": "H6",
         "name": "Hard Negative H6",
@@ -549,91 +1079,13 @@
         "flaggedAsInauthentic": false,
         "memberFlagRatio": 0.0
       }
-    ],
-    "clusters_detected": 3,
-    "total_clusters": 41,
-    "detected_bot_dids": [
-      "did:plc:f7_sleepers_42_002",
-      "did:plc:f8_slowdrip_42_009",
-      "did:plc:f11_sybilscattered_42_011",
-      "did:plc:f11_sybilscattered_42_014",
-      "did:plc:f8_slowdrip_42_013",
-      "did:plc:f9_hybrid_42_002",
-      "did:plc:f11_sybilscattered_42_012",
-      "did:plc:f7_sleepers_42_010",
-      "did:plc:f11_sybilscattered_42_015",
-      "did:plc:f9_hybrid_42_006",
-      "did:plc:f7_sleepers_42_012",
-      "did:plc:f7_sleepers_42_009",
-      "did:plc:f11_sybilscattered_42_009",
-      "did:plc:f7_sleepers_42_004",
-      "did:plc:f8_slowdrip_42_008",
-      "did:plc:f12_smallcell_42_002",
-      "did:plc:f9_hybrid_42_013",
-      "did:plc:f8_slowdrip_42_005",
-      "did:plc:f10_camo_42_005",
-      "did:plc:f7_sleepers_42_015",
-      "did:plc:f10_camo_42_000",
-      "did:plc:f8_slowdrip_42_004",
-      "did:plc:f9_hybrid_42_003",
-      "did:plc:f10_camo_42_002",
-      "did:plc:f8_slowdrip_42_010",
-      "did:plc:f8_slowdrip_42_012",
-      "did:plc:f7_sleepers_42_001",
-      "did:plc:f8_slowdrip_42_001",
-      "did:plc:f11_sybilscattered_42_008",
-      "did:plc:f7_sleepers_42_003",
-      "did:plc:f10_camo_42_007",
-      "did:plc:f7_sleepers_42_005",
-      "did:plc:f9_hybrid_42_015",
-      "did:plc:f12_smallcell_42_001",
-      "did:plc:f7_sleepers_42_007",
-      "did:plc:f9_hybrid_42_014",
-      "did:plc:f8_slowdrip_42_006",
-      "did:plc:f9_hybrid_42_007",
-      "did:plc:f11_sybilscattered_42_004",
-      "did:plc:f12_smallcell_42_004",
-      "did:plc:f8_slowdrip_42_011",
-      "did:plc:f10_camo_42_004",
-      "did:plc:f10_camo_42_001",
-      "did:plc:f7_sleepers_42_008",
-      "did:plc:f7_sleepers_42_006",
-      "did:plc:f8_slowdrip_42_003",
-      "did:plc:f11_sybilscattered_42_002",
-      "did:plc:f9_hybrid_42_005",
-      "did:plc:f7_sleepers_42_014",
-      "did:plc:f9_hybrid_42_010",
-      "did:plc:f8_slowdrip_42_002",
-      "did:plc:f10_camo_42_010",
-      "did:plc:f10_camo_42_009",
-      "did:plc:f10_camo_42_003",
-      "did:plc:f10_camo_42_006",
-      "did:plc:f9_hybrid_42_001",
-      "did:plc:f10_camo_42_011",
-      "did:plc:f10_camo_42_012",
-      "did:plc:f10_camo_42_008",
-      "did:plc:f8_slowdrip_42_000",
-      "did:plc:f11_sybilscattered_42_007",
-      "did:plc:f9_hybrid_42_004",
-      "did:plc:f9_hybrid_42_012",
-      "did:plc:f9_hybrid_42_000",
-      "did:plc:f11_sybilscattered_42_001",
-      "did:plc:f7_sleepers_42_000",
-      "did:plc:f10_camo_42_013",
-      "did:plc:f9_hybrid_42_011",
-      "did:plc:f9_hybrid_42_008",
-      "did:plc:f12_smallcell_42_000",
-      "did:plc:f7_sleepers_42_013",
-      "did:plc:f12_smallcell_42_003",
-      "did:plc:f7_sleepers_42_011",
-      "did:plc:f11_sybilscattered_42_013",
-      "did:plc:f11_sybilscattered_42_005",
-      "did:plc:f11_sybilscattered_42_000",
-      "did:plc:f11_sybilscattered_42_006",
-      "did:plc:f9_hybrid_42_009",
-      "did:plc:f11_sybilscattered_42_010",
-      "did:plc:f11_sybilscattered_42_003",
-      "did:plc:f8_slowdrip_42_007"
     ]
-  }
+  },
+  "honestLimitations": [
+    "Character 3-gram similarity misses a rewrite that shares little surface form with the source sentence.",
+    "Aged accounts that copy an allowlisted headline are classified as news sharing.",
+    "The ingestor reads the public post firehose in one process and filters keywords locally.",
+    "Account creation time comes from plc.directory, with getProfile as the fallback. A failed lookup stores no creation time.",
+    "A confidence interval is published only when at least 10 seeds were run."
+  ]
 }
