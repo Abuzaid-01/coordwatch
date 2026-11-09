@@ -76,6 +76,7 @@ export default function App() {
   const [clusters, setClusters] = useState<ClusterDetail[]>([]);
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [timeline, setTimeline] = useState<TimelineBucket[]>([]);
+  const [topicPosts, setTopicPosts] = useState<any[]>([]);
   const [evalResult, setEvalResult] = useState<EvaluationResult | null>(null);
   const [newKeyword, setNewKeyword] = useState('');
   const [trackingStatus, setTrackingStatus] = useState('');
@@ -107,14 +108,16 @@ export default function App() {
 
   const fetchAnalysis = useCallback(async (topicId: number) => {
     try {
-      const [cData, gData, tData] = await Promise.all([
+      const [cData, gData, tData, pData] = await Promise.all([
         fetchJson(`${API_BASE}/api/clusters?topicId=${topicId}`),
         fetchJson(`${API_BASE}/api/graph?topicId=${topicId}`),
         fetchJson(`${API_BASE}/api/timeline?topicId=${topicId}`),
+        fetchJson(`${API_BASE}/api/topics/${topicId}/posts`).catch(() => ({ posts: [] })),
       ]);
       setClusters(cData.clusters || []);
       setGraphData(gData);
       setTimeline(tData.timeline || []);
+      setTopicPosts(pData.posts || []);
       setLoadError(null);
     } catch (err) {
       setLoadError(err instanceof Error ? `Could not load this topic. ${err.message}` : 'Could not load this topic.');
@@ -537,7 +540,9 @@ export default function App() {
                   <h2 className="display mt-1 text-3xl text-[#F7F2EA]">Detected clusters</h2>
                 </div>
                 {clusters.length === 0 ? (
-                  <div className="p-10 text-center text-[#F6F1E8]/45">No clusters detected yet.</div>
+                  <div className="p-8 text-center text-[#F6F1E8]/45">
+                    No coordinated clusters detected yet. (A coordination cluster requires ≥3 accounts synchronizing text, burst timing, or URLs).
+                  </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -595,6 +600,45 @@ export default function App() {
                         })}
                       </tbody>
                     </table>
+                  </div>
+                )}
+              </motion.section>
+
+              {/* ── Topic Captured Posts Feed ── */}
+              <motion.section {...reveal} className="glass-panel overflow-hidden">
+                <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
+                  <div>
+                    <p className="kicker">Live Stream</p>
+                    <h2 className="display mt-1 text-3xl text-[#F7F2EA]">Captured Posts</h2>
+                  </div>
+                  <div className="text-xs text-[#F6F1E8]/50 font-mono">
+                    {topicPosts.length} captured
+                  </div>
+                </div>
+                {topicPosts.length === 0 ? (
+                  <div className="p-8 text-center text-[#F6F1E8]/45">No posts captured yet for this keyword.</div>
+                ) : (
+                  <div className="divide-y divide-white/[0.06] max-h-96 overflow-y-auto">
+                    {topicPosts.map((p: any) => (
+                      <div key={p.id} className="p-4 hover:bg-white/[0.02] transition-colors">
+                        <div className="flex items-center justify-between text-xs text-[#F6F1E8]/50 font-mono mb-1">
+                          <span className="font-semibold text-[#F7F2EA]">
+                            {revealHandles ? (p.author_handle || p.authorHandle || p.did) : (p.author_alias || p.authorAlias || `A-${p.did.slice(-6).toUpperCase()}`)}
+                          </span>
+                          <span>{p.created_at ? p.created_at.replace('T', ' ').slice(0, 19) + ' UTC' : ''}</span>
+                        </div>
+                        <p className="text-sm text-[#E8DFD2] leading-relaxed whitespace-pre-wrap">{p.text}</p>
+                        {p.links?.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                            {p.links.map((link: string, idx: number) => (
+                              <a key={idx} href={link} target="_blank" rel="noreferrer" className="text-[#F0B5A2] hover:underline truncate max-w-xs">
+                                🔗 {link}
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </motion.section>
