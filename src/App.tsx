@@ -677,6 +677,7 @@ export default function App() {
                   if (cl) setInspectedCluster(cl);
                 }}
                 onBack={() => setInspectedCluster(null)}
+                isLiveTopic={currentTopicObj?.source === 'live'}
               />
             </div>
           </div>

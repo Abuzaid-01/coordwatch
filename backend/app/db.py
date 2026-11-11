@@ -140,9 +140,28 @@ def create_or_get_topic(keyword: str, mode: str = "hybrid", source: str = "live"
         conn.close()
 
 
-def get_topic_posts_and_accounts(topic_id: int) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+def _parse_ts(iso_str: Optional[str]) -> float:
+    if not iso_str:
+        return 0.0
+    try:
+        return datetime.fromisoformat(iso_str.replace("Z", "+00:00")).timestamp()
+    except Exception:
+        return 0.0
+
+
+def get_topic_posts_and_accounts(
+    topic_id: int,
+    window_hours: Optional[int] = None,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     conn = get_connection()
     try:
+        t_row = conn.execute("SELECT source FROM topics WHERE id = ?", (topic_id,)).fetchone()
+        topic_source = t_row["source"] if t_row and "source" in t_row.keys() else "live"
+
+        win = window_hours
+        if win is None and topic_source == "live":
+            win = settings.analysis_window_hours
+
         p_rows = conn.execute(
             """
             SELECT p.id, p.did, p.text, p.text_norm, p.created_at, p.topic_id, p.links, p.hashtags, p.source,
@@ -185,6 +204,13 @@ def get_topic_posts_and_accounts(topic_id: int) -> Tuple[List[Dict[str, Any]], L
                 "author_created_at": r["author_created_at"],
             })
 
+        if win is not None and topic_source == "live":
+            post_timestamps = [_parse_ts(p.get("created_at") or "") for p in posts]
+            if post_timestamps:
+                ref_ts = max(post_timestamps)
+                cutoff_ts = ref_ts - (win * 3600.0)
+                posts = [p for p, ts in zip(posts, post_timestamps) if ts >= cutoff_ts]
+
         a_rows = conn.execute(
             """
             SELECT DISTINCT a.did, a.handle, a.alias, a.created_at, a.first_seen, a.enriched, a.enrich_status, a.enrich_attempts
@@ -208,6 +234,10 @@ def get_topic_posts_and_accounts(topic_id: int) -> Tuple[List[Dict[str, Any]], L
             }
             for r in a_rows
         ]
+        if win is not None and topic_source == "live":
+            post_dids = {p["did"] for p in posts}
+            accounts = [a for a in accounts if a["did"] in post_dids]
+
         return posts, accounts
     finally:
         conn.close()

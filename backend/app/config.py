@@ -48,6 +48,7 @@ class Settings:
     min_edge_weight: float = 0.18
     min_cluster_size: int = 3
     max_graph_nodes: int = 160
+    analysis_window_hours: int = 72
 
     # Cluster scoring weights: score = 100 * (0.35*text + 0.25*timing + 0.20*age + 0.20*links)
     weight_text: float = 0.35

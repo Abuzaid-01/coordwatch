@@ -112,6 +112,7 @@ def compute_campaign_level_recall(
             detected_count += 1
         breakdown.append({
             "campaign_id": c["id"],
+            "family": c.get("family", c["id"]),
             "name": c.get("name", c["id"]),
             "size": len(members),
             "detected_members": detected_members,

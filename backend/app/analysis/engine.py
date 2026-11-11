@@ -23,7 +23,7 @@ def _pair_key(d1: str, d2: str) -> Tuple[str, str, str]:
 def run_topic_analysis(
     topic_id: int,
     posts: List[Dict[str, Any]],
-    accounts: List[Dict[str, Any]],
+    accounts: Optional[List[Dict[str, Any]]] = None,
     min_edge_weight: float = settings.min_edge_weight,
     min_cluster_size: int = settings.min_cluster_size,
     enable_fp_protection: bool = True,
@@ -34,7 +34,19 @@ def run_topic_analysis(
     Executes full multi-signal detection, Louvain clustering, scoring,
     and returns clusters, graph data (nodes + links), and timeline buckets.
     """
+    if accounts is None:
+        accounts = []
+
     # 1. Account and Post Lookups
+    from backend.app.textutil import apply_prepare
+
+    prepared_posts: List[Dict[str, Any]] = []
+    for p in posts:
+        if "text_norm" not in p:
+            p = apply_prepare(dict(p))
+        prepared_posts.append(p)
+    posts = prepared_posts
+
     acc_map: Dict[str, Dict[str, Any]] = {a["did"]: a for a in accounts}
     post_counts_by_did: Dict[str, int] = {}
     posts_by_did: Dict[str, List[Dict[str, Any]]] = {}
@@ -319,11 +331,15 @@ def run_topic_analysis(
     graph_links = []
     for e in active_edges:
         if e["did_a"] in sel_set and e["did_b"] in sel_set:
+            sigs = e["signals"]
+            sig_dict = {k: round(v, 3) for k, v in sigs.items() if v >= 0.20}
+            dominant = max(sigs.items(), key=lambda kv: kv[1])[0] if any(v > 0 for v in sigs.values()) else None
             graph_links.append({
                 "source": e["did_a"],
                 "target": e["did_b"],
                 "weight": e["weight"],
-                "signals": [k for k, v in e["signals"].items() if v >= 0.20],
+                "signals": sig_dict,
+                "dominantSignal": dominant,
             })
 
     # 6. Timeline Histogram Generation (15-min or hourly buckets)

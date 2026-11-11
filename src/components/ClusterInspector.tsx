@@ -8,6 +8,7 @@ interface ClusterInspectorProps {
   revealHandles?: boolean;
   onToggleRevealHandles?: () => void;
   onBack?: () => void;
+  isLiveTopic?: boolean;
 }
 
 export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
@@ -17,6 +18,7 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
   revealHandles = false,
   onToggleRevealHandles,
   onBack,
+  isLiveTopic,
 }) => {
   const [dossierTab, setDossierTab] = useState<'evidence' | 'posts' | 'cohort'>('evidence');
   const [showNormalizedText, setShowNormalizedText] = useState(false);
@@ -548,7 +550,10 @@ export const ClusterInspector: React.FC<ClusterInspectorProps> = ({
 
       {/* Dossier Footer Note */}
       <div className="px-4 py-2.5 bg-[rgba(8,20,42,0.5)] border-t border-white/10 flex items-center justify-between text-[11px] text-[#B6AC9E] font-mono tabular-nums">
-        <span>Community Algorithm: Louvain Modularity</span>
+        <span>
+          Community Algorithm: Louvain Modularity
+          {isLiveTopic && ' · Analysis Window: 72h'}
+        </span>
         <span>Updated {cluster.computedAt ? cluster.computedAt.slice(11, 19) : new Date().toISOString().slice(11, 19)} UTC</span>
       </div>
     </aside>

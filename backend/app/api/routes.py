@@ -9,6 +9,7 @@ Includes fixes:
 from datetime import datetime, timezone
 import json
 import logging
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -200,6 +201,14 @@ def get_evaluation_latest() -> Dict[str, Any]:
     finally:
         conn.close()
 
+    disk_path = Path("backend/data/evaluation_runs/latest.json")
+    if disk_path.exists():
+        try:
+            with disk_path.open("r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+
     return {
         "status": "not_run",
         "detail": "No benchmark is stored. Use the lab button or python -m backend.app.sim.run_eval.",
@@ -218,6 +227,7 @@ def run_evaluation(payload: EvalRunPayload) -> Dict[str, Any]:
         n_permutations=50,
         evasion_seeds=[seed],
         label="lab sample",
+        persist_path=None,
     )
 
     conn = get_connection()

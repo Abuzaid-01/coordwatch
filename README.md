@@ -106,20 +106,20 @@ PYTHONPATH=. python3 scripts/generate_eval_report.py
 The block below is the script output from that published run. The runner also prints true positives and false positives. Those two counts are the first dev seed. The means are in the table.
 
 ### Measured benchmark
-> **Generated from:** `backend/data/evaluation_runs/latest.json` · **Git commit:** `41fad02-dirty` · **Computed:** `2026-11-07 06:10:14 UTC`
+> **Generated from:** `backend/data/evaluation_runs/latest.json` · **Git commit:** `a023456-dirty` · **Computed:** `2026-11-09 14:44:40 UTC`
 > **Label:** `published` · **Split:** same 12 families and all 10 hard negatives; dev and test differ by seed
 > **Dev seeds:** `[42, 43, 44, 45, 46, 47, 48, 49, 50, 51]` · **Test seeds:** `[142, 143, 144, 145, 146, 147, 148, 149, 150, 151]` · **Organic per seed:** `200` · **Permutations:** `200`
 
 #### Dev seeds and unseen seeds
 | Metric | Dev seeds | Unseen seeds | Note |
 | :--- | :---: | :---: | :--- |
-| **Precision** | 0.920 ± 0.065 [0.874, 0.946] | 0.908 ± 0.064 [0.862, 0.939] | Account-level |
+| **Precision** | 0.935 ± 0.045 [0.907, 0.964] | 0.869 ± 0.063 [0.823, 0.902] | Account-level |
 | **Recall** | 0.534 ± 0.182 [0.410, 0.632] | 0.472 ± 0.152 [0.378, 0.570] | Planted bots flagged |
-| **F1** | 0.660 ± 0.185 [0.526, 0.752] | 0.611 ± 0.143 [0.519, 0.702] | Harmonic mean |
-| **PR-AUC** | 0.689 ± 0.084 [0.636, 0.736] | 0.652 ± 0.084 [0.600, 0.701] | Outside an inauthentic cluster scores 0 |
+| **F1** | 0.657 ± 0.182 [0.522, 0.746] | 0.602 ± 0.141 [0.512, 0.692] | Harmonic mean |
+| **PR-AUC** | 0.742 ± 0.079 [0.693, 0.785] | 0.673 ± 0.104 [0.608, 0.733] | Outside an inauthentic cluster scores 0 |
 | **Campaign recall** | 0.525 ± 0.179 [0.408, 0.617] | 0.467 ± 0.155 [0.375, 0.567] | At least half the members flagged |
 | **Cluster purity** | 1.000 ± 0.000 [1.000, 1.000] | 1.000 ± 0.000 [1.000, 1.000] | n/a when no inauthentic cluster |
-| **Hard-negative flag rate** | 0.100 ± 0.000 [0.100, 0.100] | 0.110 ± 0.030 [0.100, 0.130] | Scenarios with any inauthentic member |
+| **Hard-negative flag rate** | 0.070 ± 0.046 [0.040, 0.100] | 0.110 ± 0.030 [0.100, 0.130] | Scenarios with any inauthentic member |
 | **Organic FP per 1,000** | 0.000 ± 0.000 [0.000, 0.000] | 0.000 ± 0.000 [0.000, 0.000] | Hard negatives are not in this rate |
 
 #### Null control
@@ -134,8 +134,8 @@ The block below is the script output from that published run. The runner also pr
 | :--- | :---: | :---: | :---: |
 | Exact-duplicate text, three accounts inside 6h | 0.404 | 0.832 | 0.544 |
 | Seeded coin-flip at 0.5 | 0.383 | 0.526 | 0.443 |
-| Full pipeline with benign news rule | 0.920 | 0.534 | 0.660 |
-| Same seeds with benign news rule off | 0.823 | 0.543 | 0.642 |
+| Full pipeline with benign news rule | 0.935 | 0.534 | 0.657 |
+| Same seeds with benign news rule off | 0.775 | 0.543 | 0.626 |
 
 #### Measured evasion
 | Evasion | Family | Seed | Organic | Permutations | Observed recall |
@@ -145,12 +145,12 @@ The block below is the script output from that published run. The runner also pr
 | Camouflage chatter | F10 | 42 | 80 | 50 | 1.000 |
 | Slow drip over 12h | F8 | 42 | 80 | 50 | 0.000 |
 | Paraphrase plus jitter plus aged accounts | F7 | 42 | 80 | 50 | 0.000 |
-| Paraphrase plus 6h jitter | F3 | 43 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 43 | 80 | 50 | 1.000 |
 | Aged sleeper copypasta | F7 | 43 | 80 | 50 | 1.000 |
 | Camouflage chatter | F10 | 43 | 80 | 50 | 1.000 |
 | Slow drip over 12h | F8 | 43 | 80 | 50 | 0.000 |
 | Paraphrase plus jitter plus aged accounts | F7 | 43 | 80 | 50 | 0.000 |
-| Paraphrase plus 6h jitter | F3 | 44 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 44 | 80 | 50 | 1.000 |
 | Aged sleeper copypasta | F7 | 44 | 80 | 50 | 1.000 |
 | Camouflage chatter | F10 | 44 | 80 | 50 | 1.000 |
 | Slow drip over 12h | F8 | 44 | 80 | 50 | 0.000 |
@@ -160,27 +160,27 @@ The block below is the script output from that published run. The runner also pr
 | Camouflage chatter | F10 | 45 | 80 | 50 | 1.000 |
 | Slow drip over 12h | F8 | 45 | 80 | 50 | 0.000 |
 | Paraphrase plus jitter plus aged accounts | F7 | 45 | 80 | 50 | 0.000 |
-| Paraphrase plus 6h jitter | F3 | 46 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 46 | 80 | 50 | 1.000 |
 | Aged sleeper copypasta | F7 | 46 | 80 | 50 | 1.000 |
 | Camouflage chatter | F10 | 46 | 80 | 50 | 1.000 |
 | Slow drip over 12h | F8 | 46 | 80 | 50 | 0.000 |
-| Paraphrase plus jitter plus aged accounts | F7 | 46 | 80 | 50 | 0.000 |
+| Paraphrase plus jitter plus aged accounts | F7 | 46 | 80 | 50 | 1.000 |
 | Paraphrase plus 6h jitter | F3 | 47 | 80 | 50 | 0.000 |
 | Aged sleeper copypasta | F7 | 47 | 80 | 50 | 1.000 |
 | Camouflage chatter | F10 | 47 | 80 | 50 | 1.000 |
 | Slow drip over 12h | F8 | 47 | 80 | 50 | 0.000 |
 | Paraphrase plus jitter plus aged accounts | F7 | 47 | 80 | 50 | 0.000 |
-| Paraphrase plus 6h jitter | F3 | 48 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 48 | 80 | 50 | 1.000 |
 | Aged sleeper copypasta | F7 | 48 | 80 | 50 | 1.000 |
 | Camouflage chatter | F10 | 48 | 80 | 50 | 1.000 |
 | Slow drip over 12h | F8 | 48 | 80 | 50 | 0.000 |
 | Paraphrase plus jitter plus aged accounts | F7 | 48 | 80 | 50 | 0.000 |
-| Paraphrase plus 6h jitter | F3 | 49 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 49 | 80 | 50 | 1.000 |
 | Aged sleeper copypasta | F7 | 49 | 80 | 50 | 1.000 |
 | Camouflage chatter | F10 | 49 | 80 | 50 | 1.000 |
 | Slow drip over 12h | F8 | 49 | 80 | 50 | 0.000 |
 | Paraphrase plus jitter plus aged accounts | F7 | 49 | 80 | 50 | 0.000 |
-| Paraphrase plus 6h jitter | F3 | 50 | 80 | 50 | 0.000 |
+| Paraphrase plus 6h jitter | F3 | 50 | 80 | 50 | 1.000 |
 | Aged sleeper copypasta | F7 | 50 | 80 | 50 | 1.000 |
 | Camouflage chatter | F10 | 50 | 80 | 50 | 1.000 |
 | Slow drip over 12h | F8 | 50 | 80 | 50 | 0.000 |

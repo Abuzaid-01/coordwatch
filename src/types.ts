@@ -165,6 +165,24 @@ export interface FalsePositiveStress {
   explanation?: string;
 }
 
+export interface CampaignBreakdownItem {
+  campaign_id: string;
+  family?: string;
+  name: string;
+  size: number;
+  detected_members: number;
+  detection_ratio: number;
+  flagged: boolean;
+}
+
+export interface HardNegativeItem {
+  id: string;
+  name: string;
+  class: string;
+  flaggedAsInauthentic: boolean;
+  memberFlagRatio: number;
+}
+
 export interface EvaluationReport {
   status?: string;
   detail?: string;
@@ -193,6 +211,11 @@ export interface EvaluationReport {
   plantedNetworks?: PlantedBotNetSummary[];
   networkBreakdown?: PlantedBotNetSummary[];
   evasionCurve?: EvasionPoint[];
+  campaignBreakdown?: CampaignBreakdownItem[];
+  hardNegatives?: {
+    dev: HardNegativeItem[];
+    test?: HardNegativeItem[];
+  };
   falsePositiveStress?: FalsePositiveStress;
   falsePositiveStressTest?: FalsePositiveStress;
   honestLimitations?: any[];
@@ -209,7 +232,6 @@ export interface EvaluationReport {
   baselines?: any;
   ablations?: any;
   evasionBoundaries?: any[];
-  hardNegatives?: any;
 }
 
 export type EvaluationResult = EvaluationReport;

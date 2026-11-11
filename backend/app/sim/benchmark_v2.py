@@ -9,7 +9,7 @@ import logging
 import math
 from pathlib import Path
 import random
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Union
 
 from ..analysis.engine import run_topic_analysis
 from .families import generate_bot_family
@@ -119,6 +119,7 @@ def build_scenario_v2(
                 base_time=base_time + random.Random(seed + offset).uniform(1800.0, 7200.0),
                 seed=seed + offset,
             )
+            camp["family"] = fam_id
             campaigns.append(camp)
             accounts.extend(camp["accounts"])
             posts.extend(camp["posts"])
@@ -385,6 +386,7 @@ def run_benchmark_v2_suite(
     n_permutations: int = 200,
     evasion_seeds: Optional[List[int]] = None,
     label: str = "published",
+    persist_path: Optional[Union[str, Path]] = Path("backend/data/evaluation_runs/latest.json"),
 ) -> Dict[str, Any]:
     eval_seeds = list(seeds or list(range(42, 52)))
     heldout_seeds = list(test_seeds or list(range(142, 152)))
@@ -528,6 +530,7 @@ def run_benchmark_v2_suite(
         "evasionBoundaries": evasion_rows,
         "falsePositiveStress": fp_stress,
         "falsePositiveStressTest": fp_stress,
+        "campaignBreakdown": dev_runs[0]["campaign_breakdown"],
         "hardNegatives": {
             "dev": dev_runs[0]["hard_negatives_breakdown"],
             "test": test_runs[0]["hard_negatives_breakdown"] if test_runs else [],
@@ -541,10 +544,10 @@ def run_benchmark_v2_suite(
         ],
     }
 
-    report_dir = Path("backend/data/evaluation_runs")
-    report_dir.mkdir(parents=True, exist_ok=True)
-    report_file = report_dir / "latest.json"
-    with report_file.open("w", encoding="utf-8") as handle:
-        json.dump(report, handle, indent=2)
-    logger.info("Saved evaluation report to %s", report_file)
+    if persist_path is not None:
+        report_file = Path(persist_path)
+        report_file.parent.mkdir(parents=True, exist_ok=True)
+        with report_file.open("w", encoding="utf-8") as handle:
+            json.dump(report, handle, indent=2)
+        logger.info("Saved evaluation report to %s", report_file)
     return report

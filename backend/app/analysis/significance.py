@@ -87,6 +87,18 @@ def compute_cluster_significance(
         return float(burst_count)
 
     obs_stat = calculate_burst_stat(all_dids, all_timestamps, cluster_set)
+    if obs_stat == 0.0:
+        return {
+            "p_value": None,
+            "status": "not_applicable",
+            "reason": "no post pairs within 90-second burst window",
+            "stat_observed": 0.0,
+            "stat_null_mean": 0.0,
+            "stat_null_std": 0.0,
+            "n_permutations": 0,
+            "cluster_score_used": float(cluster_score or 0.0),
+            "significant": False,
+        }
 
     rng = random.Random(seed)
     null_stats: List[float] = []
@@ -176,11 +188,17 @@ def apply_detection_decisions(clusters: List[Dict[str, Any]], alpha: float = 0.0
     """FDR q-values, then withhold an inauthentic label that did not survive them.
 
     Benign clusters stay benign. A cluster that was not tested cannot carry
-    an inauthentic claim.
+    an inauthentic claim, unless the timing test was not applicable (no pairs inside 90s).
     """
     clusters = apply_benjamini_hochberg_fdr(clusters, alpha=alpha)
     for cl in clusters:
         sig = cl.get("significance") or {}
+        if sig.get("status") == "not_applicable":
+            reasons = list(cl.get("reasons") or [])
+            reasons.append("Timing synchronization permutation test not applicable: no post pairs within 90-second burst window.")
+            cl["reasons"] = reasons
+            continue
+
         tested = sig.get("status") == "tested" and sig.get("p_value") is not None
         if cl.get("classification") == "coordinated_inauthentic" and (not tested or not sig.get("fdr_significant")):
             cl["classification"] = "insufficient_evidence"

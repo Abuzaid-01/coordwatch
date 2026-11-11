@@ -1,15 +1,5 @@
 import React, { useState } from 'react';
 import { EvaluationReport } from '../types';
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from 'recharts';
 
 type SummaryStat = {
   mean?: number | null;
@@ -79,7 +69,6 @@ export const EvaluationLabView: React.FC<EvaluationLabViewProps> = ({
   }
 
   const stress = report.falsePositiveStressTest ?? report.falsePositiveStress;
-  const planted = report.plantedNetworks ?? [];
 
   return (
     <div className="space-y-5">
@@ -182,165 +171,158 @@ export const EvaluationLabView: React.FC<EvaluationLabViewProps> = ({
         </div>
       </section>
 
-      {/* Split Grid: Evasion Degradation Chart + Planted Network Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* Evasion Curve Chart (7 cols) */}
-        <div className="lg:col-span-7 bg-[rgba(16,36,66,0.42)] backdrop-blur-xl border border-white/10 rounded-[26px] overflow-hidden flex flex-col justify-between">
-          <div className="px-5 py-3.5 bg-[rgba(8,20,42,0.5)] border-b border-white/10">
-            <h2 className="text-sm font-semibold text-[#F6F1E8] tracking-tight">
-              Detection Performance (F1) vs. Adversarial Evasion Intensity
-            </h2>
-            <p className="text-xs text-[#B6AC9E] mt-0.5">
-              Measures how account-level F1 degrades as planted bot networks progressively apply 4 independent evasion tactics from 0% (Baseline) to 90% (Extreme).
-            </p>
-          </div>
+      {/* Planted Campaign Breakdown & Hard Negatives Grid */}
+      {((report.campaignBreakdown && report.campaignBreakdown.length > 0) || (report.hardNegatives?.dev && report.hardNegatives.dev.length > 0)) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+          {/* Planted Campaigns Breakdown */}
+          {report.campaignBreakdown && report.campaignBreakdown.length > 0 && (
+            <div className="bg-[rgba(16,36,66,0.42)] backdrop-blur-xl border border-white/10 rounded-[26px] overflow-hidden flex flex-col justify-between">
+              <div>
+                <div className="px-5 py-3.5 bg-[rgba(8,20,42,0.5)] border-b border-white/10">
+                  <h2 className="text-sm font-semibold text-[#F6F1E8] tracking-tight">
+                    Planted Bot Campaigns (12 Families — Dev Seed)
+                  </h2>
+                  <p className="text-xs text-[#B6AC9E] mt-0.5">
+                    Ground-truth detection breakdown for the 12 adversarial campaign families on the primary dev seed.
+                  </p>
+                </div>
+                <div className="p-4 overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[#B6AC9E]">
+                        <th className="py-2 pr-2 font-medium">Family / Campaign</th>
+                        <th className="py-2 px-2 font-medium text-right">Caught</th>
+                        <th className="py-2 px-2 font-medium text-right">Recall</th>
+                        <th className="py-2 pl-2 font-medium text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.08] font-mono tabular-nums">
+                      {report.campaignBreakdown.map((c) => (
+                        <tr key={c.campaign_id} className="hover:bg-white/[0.04]">
+                          <td className="py-2.5 pr-2 font-sans">
+                            <div className="font-medium text-[#E8DFD2]">{c.family ? `${c.family} — ${c.name}` : c.name}</div>
+                            <div className="text-[11px] text-[#B6AC9E] font-mono">{c.campaign_id} · {c.size} accounts</div>
+                          </td>
+                          <td className="py-2.5 px-2 text-right text-[#E8DFD2]">
+                            {c.detected_members}/{c.size}
+                          </td>
+                          <td className="py-2.5 px-2 text-right text-[#C5DCCB]">
+                            {formatMaybe(c.detection_ratio, 1, true)}
+                          </td>
+                          <td className="py-2.5 pl-2 text-right">
+                            {c.flagged ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[rgba(183,212,196,0.16)] text-[#C5DCCB] border border-[rgba(183,212,196,0.38)]">
+                                Flagged
+                              </span>
+                            ) : (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[rgba(224,122,98,0.16)] text-[#F0B5A2] border border-[rgba(224,122,98,0.38)]">
+                                Missed
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
-          <div className="p-5 h-80 w-full" data-testid="evasion-chart-container">
-            {report.evasionCurve && report.evasionCurve.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={report.evasionCurve}
-                margin={{ top: 10, right: 20, left: -10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(246,241,232,0.08)" />
-                <XAxis
-                  dataKey="level"
-                  stroke="#B6AC9E"
-                  tick={{ fill: '#B6AC9E', fontSize: 11 }}
-                />
-                <YAxis
-                  domain={[0, 1.0]}
-                  stroke="#B6AC9E"
-                  tick={{ fill: '#B6AC9E', fontSize: 11 }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#10243F',
-                    borderColor: 'rgba(246,241,232,0.16)',
-                    fontSize: '12px',
-                    color: '#F6F1E8',
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '8px', color: '#E8DFD2' }} />
-                <Line
-                  type="monotone"
-                  dataKey="textParaphraseF1"
-                  name="Text Paraphrasing"
-                  stroke="#E07A62"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="randomDelayF1"
-                  name="Random Posting Delays"
-                  stroke="#E8B86D"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="ageSpreadF1"
-                  name="Spread Account Creation"
-                  stroke="#F6F1E8"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="linkRotationF1"
-                  name="Link & Tag Rotation"
-                  stroke="#B7D4C4"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            ) : (
-              <p className="text-xs text-[#B6AC9E]">This run has no evasion-intensity curve. Measured rows, when present, are in the table below.</p>
-            )}
-          </div>
+          {/* Hard Negatives Breakdown */}
+          {report.hardNegatives?.dev && report.hardNegatives.dev.length > 0 && (
+            <div className="bg-[rgba(16,36,66,0.42)] backdrop-blur-xl border border-white/10 rounded-[26px] overflow-hidden flex flex-col justify-between">
+              <div>
+                <div className="px-5 py-3.5 bg-[rgba(8,20,42,0.5)] border-b border-white/10">
+                  <h2 className="text-sm font-semibold text-[#F6F1E8] tracking-tight">
+                    Hard-Negative Controls (Dev Seed Calibration)
+                  </h2>
+                  <p className="text-xs text-[#B6AC9E] mt-0.5">
+                    H1–H10 control scenarios verifying the detector does not flag viral news, organic bursts, or petitions as inauthentic.
+                  </p>
+                </div>
+                <div className="p-4 overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[#B6AC9E]">
+                        <th className="py-2 pr-2 font-medium">Scenario</th>
+                        <th className="py-2 px-2 font-medium">Intended Class</th>
+                        <th className="py-2 px-2 font-medium text-right">Member Flag Ratio</th>
+                        <th className="py-2 pl-2 font-medium text-right">Flagged</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.08] font-mono tabular-nums">
+                      {report.hardNegatives.dev.map((hn) => (
+                        <tr key={hn.id} className="hover:bg-white/[0.04]">
+                          <td className="py-2.5 pr-2 font-sans">
+                            <div className="font-medium text-[#E8DFD2]">{hn.id} · {hn.name}</div>
+                          </td>
+                          <td className="py-2.5 px-2 text-[#B6AC9E] font-mono text-[11px]">
+                            {hn.class}
+                          </td>
+                          <td className="py-2.5 px-2 text-right text-[#E8DFD2]">
+                            {formatMaybe(hn.memberFlagRatio, 1, true)}
+                          </td>
+                          <td className="py-2.5 pl-2 text-right">
+                            {hn.flaggedAsInauthentic ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[rgba(224,122,98,0.16)] text-[#F0B5A2] border border-[rgba(224,122,98,0.38)]">
+                                Flagged FP
+                              </span>
+                            ) : (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[rgba(183,212,196,0.16)] text-[#C5DCCB] border border-[rgba(183,212,196,0.38)]">
+                                Passed
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
+      )}
 
-        {/* Planted Bot Networks Ground-Truth Table + Viral News Stress Test (5 cols) */}
-        <div className="lg:col-span-5 bg-[rgba(16,36,66,0.42)] backdrop-blur-xl border border-white/10 rounded-[26px] overflow-hidden divide-y divide-white/10 flex flex-col justify-between">
-          <div>
-            <div className="px-4 py-3 bg-[rgba(8,20,42,0.5)] border-b border-white/10">
+      {/* Phase 8.5 False-Positive Stress Test: Viral Breaking News Event */}
+      {stress && (
+        <div className="bg-[rgba(16,36,66,0.42)] backdrop-blur-xl border border-white/10 rounded-[26px] overflow-hidden p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
               <h2 className="text-sm font-semibold text-[#F6F1E8] tracking-tight">
-                Planted Bot Networks (Ground-Truth Breakdown)
+                False-Positive Stress Test: Viral Breaking News Event
               </h2>
-            </div>
-            <div className="p-4 overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-white/10 text-[#B6AC9E]">
-                    <th className="py-2 pr-2 font-medium">Network</th>
-                    <th className="py-2 px-2 font-medium text-right">Caught</th>
-                    <th className="py-2 px-2 font-medium text-right">Recall</th>
-                    <th className="py-2 pl-2 font-medium text-right">Mean Score</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.08] font-mono tabular-nums">
-                  {planted.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="py-3 text-[#8E867C] font-sans">This report has no per-network breakdown.</td>
-                    </tr>
-                  ) : planted.map((net) => (
-                    <tr key={net.id || net.name} className="hover:bg-white/[0.04]">
-                      <td className="py-2.5 pr-2 font-sans">
-                        <div className="font-medium text-[#E8DFD2]">{net.name}</div>
-                        <div className="text-[11px] text-[#B6AC9E]">{net.tactic}</div>
-                      </td>
-                      <td className="py-2.5 px-2 text-right text-[#E8DFD2]">
-                        {net.detectedAccounts ?? 'n/a'}/{net.plantedAccounts ?? 'n/a'}
-                      </td>
-                      <td className="py-2.5 px-2 text-right text-[#C5DCCB]">
-                        {formatMaybe(net.recall, 0, true)}
-                      </td>
-                      <td className="py-2.5 pl-2 text-right text-[#F0A898]">
-                        {net.meanClusterScore ?? 'n/a'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <p className="text-xs text-[#B6AC9E] mt-0.5">
+                {stress.scenario}
+              </p>
             </div>
           </div>
-
-          {/* Phase 8.5 False-Positive Stress Test Summary */}
-          <div className="p-4 bg-[rgba(7,18,36,0.45)]">
-            <h3 className="text-xs font-semibold text-[#E8DFD2]">
-              False-Positive Stress Test: Viral Breaking News Event
-            </h3>
-            {stress ? (
-              <>
-            <p className="text-xs text-[#B6AC9E] mt-1 leading-relaxed">
-              {stress.scenario}
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-3 text-xs font-mono tabular-nums">
-              <div className="p-2.5 bg-[rgba(7,18,36,0.55)] border border-white/10 rounded">
-                <div className="text-[#B6AC9E]">News rule off</div>
-                <div className="text-base font-bold text-[#F0A898] mt-0.5">
-                  {stress.rawFlaggedWithoutProtection}/{stress.organicNewsAccounts ?? stress.organicUsersCount} inauthentic
-                </div>
-              </div>
-              <div className="p-2.5 bg-[rgba(7,18,36,0.55)] border border-white/10 rounded">
-                <div className="text-[#B6AC9E]">News rule on</div>
-                <div className="text-base font-bold text-[#C5DCCB] mt-0.5">
-                  {stress.flaggedWithProtection}/{stress.organicNewsAccounts ?? stress.organicUsersCount} inauthentic
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono tabular-nums">
+            <div className="p-3 bg-[rgba(7,18,36,0.55)] border border-white/10 rounded">
+              <div className="text-[#B6AC9E]">News rule off</div>
+              <div className="text-base font-bold text-[#F0A898] mt-1">
+                {stress.rawFlaggedWithoutProtection}/{stress.organicNewsAccounts ?? stress.organicUsersCount} inauthentic
+                <span className="text-xs font-normal text-[#B6AC9E] ml-2">
+                  ({formatMaybe(stress.falsePositiveRateBefore, 0, true)})
+                </span>
               </div>
             </div>
-            <p className="text-[11px] text-[#B6AC9E] mt-2 leading-relaxed">
-              {stress.explanation}
-            </p>
-              </>
-            ) : (
-              <p className="text-xs text-[#8E867C] mt-1">This report has no news-burst stress test.</p>
-            )}
+            <div className="p-3 bg-[rgba(7,18,36,0.55)] border border-white/10 rounded">
+              <div className="text-[#B6AC9E]">News rule on (Production)</div>
+              <div className="text-base font-bold text-[#C5DCCB] mt-1">
+                {stress.flaggedWithProtection}/{stress.organicNewsAccounts ?? stress.organicUsersCount} inauthentic
+                <span className="text-xs font-normal text-[#B6AC9E] ml-2">
+                  ({formatMaybe(stress.falsePositiveRateAfter, 1, true)})
+                </span>
+              </div>
+            </div>
           </div>
+          <p className="text-[11px] text-[#B6AC9E] mt-3 leading-relaxed">
+            {stress.explanation}
+          </p>
         </div>
-      </div>
+      )}
 
       {/* Benchmark v2: Dev Split vs. Held-Out Test Split (95% Bootstrap CIs) */}
       {report.devSummary && report.testSummary && (

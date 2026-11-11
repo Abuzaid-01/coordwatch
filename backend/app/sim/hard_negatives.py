@@ -147,10 +147,12 @@ def generate_hard_negative(
 
     elif scenario_id == "H5":
         # Brand / organization multi-account posting (corporate + regional chapters)
+        # Accounts spread across months (180 to 900 days ago, >48h between accounts)
         for i in range(6):
             did = f"did:plc:hn5_{seed}_{i:03d}"
             dids.append(did)
-            c_ts = base_time - (500.0 * 86400.0)
+            age_days = 180.0 + (i * 110.0) + rng.uniform(5.0, 70.0)
+            c_ts = base_time - (age_days * 86400.0)
             c_iso = datetime.fromtimestamp(c_ts, timezone.utc).isoformat()
             accounts.append({
                 "did": did, "handle": f"green-org-branch-{i}.org.bsky.social",

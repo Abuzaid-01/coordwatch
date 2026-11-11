@@ -104,9 +104,17 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
 
   const filteredLinks = useMemo(() => {
     if (signalFilter === 'all') return graph.links;
-    return graph.links.filter(
-      (l) => l.dominantSignal === signalFilter || l.signals[signalFilter] >= 0.45
-    );
+    return graph.links.filter((l) => {
+      if (l.dominantSignal === signalFilter) return true;
+      if (Array.isArray(l.signals)) {
+        return l.signals.includes(signalFilter);
+      }
+      if (l.signals && typeof l.signals === 'object') {
+        const val = (l.signals as unknown as Record<string, number>)[signalFilter] ?? 0;
+        return val >= 0.45;
+      }
+      return false;
+    });
   }, [graph.links, signalFilter]);
 
   // Deterministic initial coordinates for both ForceGraph2D and Orbital view
@@ -141,7 +149,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
 
     clusterIds.forEach((cid, cIdx) => {
       const members = clusterGroups.get(cid)!;
-      members.sort((a, b) => b.score - a.score || b.postCount - a.postCount);
+      members.sort((a, b) => b.score - a.score || (b.postCount ?? 0) - (a.postCount ?? 0));
 
       let sectorX = cx;
       let sectorY = cy;
@@ -261,7 +269,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
       const isEgoMember = !activeEgoNode || egoNeighbors.has(node.id);
       const isHovered = activeEgoNode?.id === node.id;
       const dimmed = (!inSelectedCluster && !isHovered) || (activeEgoNode && !isEgoMember);
-      const pal = getClusterPalette(node.score, node.clusterId);
+      const pal = getClusterPalette(node.score, node.clusterId ?? null);
 
       // Subtle outer halo for high-risk cluster seeds
       if (!dimmed && node.clusterId && (isHovered || node.isSeedLabel)) {
@@ -420,7 +428,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
         ctx.lineWidth = 0.6;
         ctx.strokeStyle = 'rgba(51, 65, 85, 0.12)';
       } else {
-        const pal = getClusterPalette(Math.max(s.score, t.score), s.clusterId);
+        const pal = getClusterPalette(Math.max(s.score, t.score), s.clusterId ?? null);
         ctx.lineWidth = Math.max(0.75, link.weight * 1.6);
         ctx.strokeStyle = pal.edge;
       }
@@ -670,7 +678,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
             onNodeClick={(nodeObj) => {
               const n = nodeObj as unknown as GraphNode;
               setFocusedNodeId((prev) => (prev === n.id ? null : n.id));
-              if (n.clusterId) {
+              if (n.clusterId && onSelectCluster) {
                 onSelectCluster(n.clusterId);
               }
             }}
@@ -694,7 +702,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
               const hit = findNodeAt(x, y);
               if (hit) {
                 setFocusedNodeId((prev) => (prev === hit.id ? null : hit.id));
-                if (hit.clusterId) onSelectCluster(hit.clusterId);
+                if (hit.clusterId && onSelectCluster) onSelectCluster(hit.clusterId);
                 return;
               }
               setFocusedNodeId(null);
@@ -726,7 +734,7 @@ export const NetworkGraphCanvas: React.FC<NetworkGraphCanvasProps> = ({
                 <button
                   key={cid}
                   type="button"
-                  onClick={() => onSelectCluster(cid)}
+                  onClick={() => onSelectCluster && onSelectCluster(cid)}
                   className={`flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono rounded border transition-colors ${
                     isSel
                       ? 'bg-[rgba(246,241,232,0.12)] text-[#FFF8F3] border-[#E07A62] font-semibold'

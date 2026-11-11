@@ -290,3 +290,172 @@ def test_url_canonicalization_strips_tracking():
     assert canonicalize_url(u1) == canonicalize_url(u3)
 
 
+def test_graph_links_numeric_signals_and_dominant_signal():
+    """Phase 1: graph_links contains numeric signals map and dominantSignal."""
+    from backend.app.analysis.engine import run_topic_analysis
+    posts = [
+        {"id": "p1", "did": "did:plc:a1", "text": "Identical copypasta headline for testing signal dictionary", "created_at": "2026-11-09T10:00:00Z"},
+        {"id": "p2", "did": "did:plc:a2", "text": "Identical copypasta headline for testing signal dictionary", "created_at": "2026-11-09T10:00:10Z"},
+        {"id": "p3", "did": "did:plc:a3", "text": "Identical copypasta headline for testing signal dictionary", "created_at": "2026-11-09T10:00:20Z"},
+    ]
+    res = run_topic_analysis(posts=posts, topic_id=999)
+    links = res["graph"]["links"]
+    assert len(links) > 0
+    first_link = links[0]
+    assert isinstance(first_link["signals"], dict)
+    assert "text" in first_link["signals"]
+    assert first_link["signals"]["text"] >= 0.70
+    assert first_link["dominantSignal"] in ("text", "timing", "age", "links")
+
+
+def test_graph_links_filter_logic_numeric_and_legacy_list():
+    """Phase 1: Filter logic keeps text>=0.8 on text, drops on timing, keeps legacy list ['links']."""
+    def link_matches_filter(link: dict, signal_filter: str) -> bool:
+        if signal_filter == "all":
+            return True
+        if link.get("dominantSignal") == signal_filter:
+            return True
+        sigs = link.get("signals")
+        if isinstance(sigs, list):
+            return signal_filter in sigs
+        if isinstance(sigs, dict):
+            return sigs.get(signal_filter, 0) >= 0.45
+        return False
+
+    numeric_link = {
+        "source": "a", "target": "b",
+        "signals": {"text": 0.8, "timing": 0.1},
+        "dominantSignal": "text"
+    }
+    assert link_matches_filter(numeric_link, "text") is True
+    assert link_matches_filter(numeric_link, "timing") is False
+    assert link_matches_filter(numeric_link, "all") is True
+
+    legacy_link = {
+        "source": "a", "target": "b",
+        "signals": ["links"],
+        "dominantSignal": None
+    }
+    assert link_matches_filter(legacy_link, "links") is True
+    assert link_matches_filter(legacy_link, "text") is False
+    assert link_matches_filter(legacy_link, "all") is True
+
+
+def test_phase2_lab_sample_does_not_touch_latest_json_and_reads_disk_fallback(tmp_path, monkeypatch):
+    """Phase 2: lab sample call with persist_path=None leaves disk file unchanged; GET falls back to disk file."""
+    import json
+    from pathlib import Path
+    from backend.app.api.routes import get_evaluation_latest, run_evaluation, EvalRunPayload
+    from backend.app.db import get_connection
+
+    # Setup dummy latest.json
+    disk_file = Path("backend/data/evaluation_runs/latest.json")
+    original_bytes = disk_file.read_bytes() if disk_file.exists() else None
+
+    # Clear evaluation_runs table temporarily
+    conn = get_connection()
+    try:
+        saved_rows = conn.execute("SELECT id, report_json, computed_at FROM evaluation_runs").fetchall()
+        conn.execute("DELETE FROM evaluation_runs")
+        conn.commit()
+
+        # With empty table, get_evaluation_latest should return disk file
+        latest = get_evaluation_latest()
+        assert latest.get("label") == "published"
+
+        # Now verify run_benchmark_v2_suite with persist_path=None does not change disk file
+        mtime_before = disk_file.stat().st_mtime if disk_file.exists() else 0
+        from backend.app.sim.benchmark_v2 import run_benchmark_v2_suite
+        res = run_benchmark_v2_suite(
+            seeds=[999],
+            test_seeds=[1999],
+            organic_count=20,
+            n_permutations=10,
+            label="lab sample",
+            persist_path=None,
+        )
+        assert res["label"] == "lab sample"
+        if original_bytes:
+            assert disk_file.read_bytes() == original_bytes
+
+    finally:
+        # Restore table
+        conn.execute("DELETE FROM evaluation_runs")
+        for r in saved_rows:
+            conn.execute(
+                "INSERT INTO evaluation_runs (id, report_json, computed_at) VALUES (?, ?, ?)",
+                (r["id"], r["report_json"], r["computed_at"]),
+            )
+        conn.commit()
+        conn.close()
+
+
+def test_phase4_h5_evaluated_as_coordinated_benign():
+    """Phase 4: H5 accounts with spread creation dates on gov.uk classify as coordinated_benign."""
+    from backend.app.sim.hard_negatives import generate_hard_negative
+    from backend.app.analysis.engine import run_topic_analysis
+
+    hn = generate_hard_negative("H5", base_time=1793850000.0, seed=42)
+    res = run_topic_analysis(topic_id=1, posts=hn["posts"], accounts=hn["accounts"])
+    clusters = res["clusters"]
+    assert len(clusters) > 0
+    h5_cluster = clusters[0]
+    assert h5_cluster["classification"] == "coordinated_benign"
+    assert h5_cluster["benignChecks"]["authoritative_news_source"] is True
+
+
+def test_phase6_live_topic_filters_by_window_while_demo_topic_retains_full_corpus():
+    """Phase 6: Live topic only reads posts within analysis_window_hours (72h), demo topic keeps whole corpus."""
+    from datetime import datetime, timezone
+    from backend.app.db import get_connection, get_topic_posts_and_accounts
+    from backend.app.config import settings
+
+    now_ts = datetime.now(timezone.utc).timestamp()
+    now_iso = datetime.fromtimestamp(now_ts, timezone.utc).isoformat()
+    recent_iso = datetime.fromtimestamp(now_ts - 3600.0, timezone.utc).isoformat()  # 1 hour ago (inside 72h)
+    old_iso = datetime.fromtimestamp(now_ts - (100 * 3600.0), timezone.utc).isoformat()  # 100 hours ago (outside 72h)
+
+    conn = get_connection()
+    live_topic_id = None
+    try:
+        # Create a live topic
+        cur = conn.execute(
+            "INSERT INTO topics (keyword, mode, source, started_at) VALUES (?, ?, ?, ?)",
+            ("testlive_unique", "hybrid", "live", now_iso),
+        )
+        live_topic_id = cur.lastrowid
+
+        # Insert 1 recent post and 1 old post
+        conn.execute(
+            "INSERT INTO posts (id, did, text, text_norm, created_at, topic_id, links, hashtags, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            ("p_recent", "did:plc:live1", "recent post", "recent post", recent_iso, live_topic_id, "[]", "[]", "live"),
+        )
+        conn.execute(
+            "INSERT INTO posts (id, did, text, text_norm, created_at, topic_id, links, hashtags, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            ("p_old", "did:plc:live2", "old post", "old post", old_iso, live_topic_id, "[]", "[]", "live"),
+        )
+        conn.commit()
+
+        # For live topic, only the recent post is within 72h
+        live_posts, live_accs = get_topic_posts_and_accounts(live_topic_id)
+        post_ids = [p["id"] for p in live_posts]
+        assert "p_recent" in post_ids
+        assert "p_old" not in post_ids
+
+        # Topic 1 (demo topic) returns its full corpus without window cutoff
+        demo_posts, _ = get_topic_posts_and_accounts(1)
+        assert len(demo_posts) > 0
+
+    finally:
+        if live_topic_id is not None:
+            conn.execute("DELETE FROM posts WHERE topic_id = ?", (live_topic_id,))
+            conn.execute("DELETE FROM topics WHERE id = ?", (live_topic_id,))
+            conn.commit()
+        conn.close()
+
+
+
+
+
+
+
